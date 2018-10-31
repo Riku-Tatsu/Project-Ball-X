@@ -1,14 +1,14 @@
 fileFormatVersion: 2
-guid: 95ce4496c0239c74482666b581525b04
+guid: 7e16d061a0c866d4183ca1003f01e217
 ModelImporter:
   serializedVersion: 23
   fileIDToRecycleName:
     100000: //RootNode
     400000: //RootNode
-    2100000: ball
     2300000: //RootNode
     3300000: //RootNode
-    4300000: IcoBall
+    4300000: EdgeColliderTest
+    2186277476908879412: ImportLogs
   externalObjects: {}
   materials:
     importMaterials: 1
