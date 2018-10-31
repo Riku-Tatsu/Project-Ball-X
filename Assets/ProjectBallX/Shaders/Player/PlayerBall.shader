@@ -12,6 +12,9 @@
 		[HDR]_EmisOutsideGlow ("Emissive Glow - Outside", Color) = (0.5,0.375,0.125,1)
 		_PulseSpeed ("Pulse Line Speed", Float) = 0.25
 		_GlowLerp("Glow Lerp", Range(0,1)) = 0
+
+		//needed because unity is stupid
+		[HideInInspector][NoScaleOffset] _Zero ("LEAVE BLANK KTHX", 2D) = "black" {}
 	}
 	SubShader {
 		Tags { "RenderType"="Opaque" }
@@ -24,11 +27,15 @@
 		// Use shader model 3.0 target, to get nicer looking lighting
 		#pragma target 3.0
 
+		sampler2D _Zero;
+		float2 uv_Zero;
+
 		struct Input {
 			float4 color : COLOR;
 			float3 worldPos;
 			float3 worldNormal;
 			float3 viewDir;
+			float2 uv_Zero;
 		};
 
 		fixed4 _Color;
@@ -53,9 +60,9 @@
 		void surf (Input v, inout SurfaceOutputStandardSpecular o) {
 
 			fixed fresnel = saturate(1.33 - length(v.viewDir - v.worldNormal));
-			fixed fresnelHack = abs(v.worldNormal.z);
+			fixed pulseUV = 1 - length((v.uv_Zero - 0.5) * 2);
 
-			fixed pulseLines = abs(sin((fresnelHack + _Time.y * _PulseSpeed) * 4 * 3.1415));
+			fixed pulseLines = abs(sin((pulseUV + _Time.y * _PulseSpeed) * 4 * 3.1415));
 			pulseLines *= pulseLines * pulseLines;
 			pulseLines = lerp(0, 1, pulseLines);
 			pulseLines = pulseLines * saturate(fresnel * 2) + saturate((fresnel - 0.125) * 2);
