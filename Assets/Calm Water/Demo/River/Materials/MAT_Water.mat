@@ -9,8 +9,7 @@ Material:
   m_Name: MAT_Water
   m_Shader: {fileID: 4800000, guid: 2e5d60e33aa6da447bb69ec37053c5ba, type: 3}
   m_ShaderKeywords: _ALPHABLEND_ON _BUMPLARGE_ON _DEPTHFOG_ON _DISPLACEMENTMODE_WAVE
-    _DISTORTIONQUALITY_HIGH _FOAM_ON _REFLECTIONTYPE_REALTIME _SCATTER_ON _WHITECAPS_ON
-    _WORLDSPACE_ON
+    _DISTORTIONQUALITY_HIGH _FOAM_ON _REFLECTIONTYPE_REALTIME _SCATTER_ON _WORLDSPACE_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -77,11 +76,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
-    - _Amplitude: 1
+    - _Amplitude: 5
     - _BumpLargeStrength: 0.865
     - _BumpScale: 1
     - _BumpStrength: 1
-    - _CapsIntensity: 2.92
+    - _CapsIntensity: 0
     - _CapsSize: 1
     - _CapsSpeed: 0.23
     - _CubeDist: 0.088
@@ -118,9 +117,9 @@ Material:
     - _Speed: -1.28
     - _SrcBlend: 5
     - _Steepness: 1
-    - _Tess: 15
+    - _Tess: 14.3
     - _UVSec: 0
-    - _WhiteCaps: 1
+    - _WhiteCaps: 0
     - _WorldSpace: 1
     - _ZWrite: 0
     m_Colors:
