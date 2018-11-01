@@ -1,19 +1,50 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Rewired;
 
 public class PlayerPhysics : MonoBehaviour {
 
 	public Rigidbody2D rBody;
+	public float maxRpm = 30.0f;
+	public float maxTorque = 15.0f;
+
+	public Player player;
 
 	// Use this for initialization
-	void Start () {
-		
+	void Start ()
+	{
+		player = ReInput.players.GetPlayer(0);
+
+		Physics2D.maxRotationSpeed = maxRpm * 60;
 	}
 	
 	// Update is called once per frame
 	void FixedUpdate ()
 	{
+		float moveInput = 0;
+
+		bool goLeft = player.GetButton("Move Left");
+		bool goRight = player.GetButton("Move Right");
+		bool goBoth = goLeft && goRight;
+
+		if(goBoth)
+		{
+			//Debug.DrawRay(rBody.position, Vector3.up * 3, Color.cyan);
+		}
+		else if(goLeft && rBody.angularVelocity < maxRpm * 60)
+		{
+			moveInput = 1;
+			//Debug.DrawRay(rBody.position, -Vector3.right * 3, Color.red);
+		}
+		else if(goRight && rBody.angularVelocity > -maxRpm * 60)
+		{
+			moveInput = -1;
+			//Debug.DrawRay(rBody.position, Vector3.right * 3, Color.green);
+		}
+
+		rBody.AddTorque(moveInput * maxTorque, ForceMode2D.Force);
+		//rBody.angularVelocity = Mathf.Clamp(rBody.angularVelocity, -maxRpm * 60, maxRpm * 60);
 
 		Vector3 hitDir = Vector3.zero;
 		bool gotHit = false;

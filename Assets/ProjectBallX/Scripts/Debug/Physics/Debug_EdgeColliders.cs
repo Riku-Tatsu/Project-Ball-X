@@ -18,8 +18,8 @@ public class Debug_EdgeColliders : MonoBehaviour {
 					Vector3 pointA = new Vector3(edgeCols[i].points[j].x, edgeCols[i].points[j].y, 0);
 					Vector3 pointB = new Vector3(edgeCols[i].points[j+1].x, edgeCols[i].points[j+1].y, 0);
 
-					edgeCols[i].transform.TransformPoint(pointA);
-					edgeCols[i].transform.TransformPoint(pointB);
+					pointA = edgeCols[i].transform.TransformPoint(pointA);
+					pointB = edgeCols[i].transform.TransformPoint(pointB);
 					
 					Gizmos.DrawLine(pointA, pointB);
 				}

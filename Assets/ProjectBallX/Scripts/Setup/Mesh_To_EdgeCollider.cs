@@ -56,8 +56,9 @@ public class Mesh_To_EdgeCollider : MonoBehaviour {
 			Vector3 pointA = new Vector3(points[i].x, points[i].y, 0);
 			Vector3 pointB = new Vector3(points[i+1].x, points[i+1].y, 0);
 
-			transform.TransformPoint(pointA);
-			transform.TransformPoint(pointB);
+			pointA = edgeCollider.transform.TransformPoint(pointA);
+			pointB = edgeCollider.transform.TransformPoint(pointB);
+
 			Gizmos.DrawLine(pointA, pointB);
 		}
 	}

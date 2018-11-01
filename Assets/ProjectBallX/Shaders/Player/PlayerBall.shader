@@ -66,6 +66,7 @@
 			pulseLines *= pulseLines * pulseLines;
 			pulseLines = lerp(0, 1, pulseLines);
 			pulseLines = pulseLines * saturate(fresnel * 2) + saturate((fresnel - 0.125) * 2);
+			pulseLines = lerp(pulseLines, clamp(pow(fresnel * 2, 2), 0, 1.5), _GlowLerp * 0.75);
 			pulseLines = pow(pulseLines, lerp(1, 2, _GlowLerp));
 
 			fixed3 EmisColor = lerp(lerp(_EmisOutsideBase, _EmisOutsideGlow, _GlowLerp), lerp(_EmisInsideBase, _EmisInsideGlow, _GlowLerp), pulseLines);
