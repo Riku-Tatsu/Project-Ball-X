@@ -1,0 +1,197 @@
+fileFormatVersion: 2
+guid: 6d66739ebdc992146a994302f2c7e636
+ModelImporter:
+  serializedVersion: 23
+  fileIDToRecycleName:
+    100000: //RootNode
+    100002: Block_1x1
+    100004: Block_1x1_COL
+    100006: Block_2x2
+    100008: Block_2x2_COL
+    100010: Cap_1x1
+    100012: Cap_1x1_COL
+    100014: Corner_2x2
+    100016: Corner_2x2_COL
+    100018: Corner_Hook_3x2
+    100020: Corner_Hook_3x2_COL
+    100022: Curve_Edgy_4x4
+    100024: Curve_Edgy_4x4_COL
+    100026: Curve_Smooth_4x4
+    100028: Curve_Smooth_4x4_COL
+    100030: Diagonal_1x2
+    100032: Diagonal_1x2_COL
+    100034: Extra_Spotlight_1x1
+    100036: Extra_Wall_Spotlight_1x1
+    100038: Straight_2x1
+    100040: Straight_2x1_COL
+    400000: //RootNode
+    400002: Block_1x1
+    400004: Block_1x1_COL
+    400006: Block_2x2
+    400008: Block_2x2_COL
+    400010: Cap_1x1
+    400012: Cap_1x1_COL
+    400014: Corner_2x2
+    400016: Corner_2x2_COL
+    400018: Corner_Hook_3x2
+    400020: Corner_Hook_3x2_COL
+    400022: Curve_Edgy_4x4
+    400024: Curve_Edgy_4x4_COL
+    400026: Curve_Smooth_4x4
+    400028: Curve_Smooth_4x4_COL
+    400030: Diagonal_1x2
+    400032: Diagonal_1x2_COL
+    400034: Extra_Spotlight_1x1
+    400036: Extra_Wall_Spotlight_1x1
+    400038: Straight_2x1
+    400040: Straight_2x1_COL
+    2100000: Wall
+    2300000: Block_1x1
+    2300002: Block_1x1_COL
+    2300004: Block_2x2
+    2300006: Block_2x2_COL
+    2300008: Cap_1x1
+    2300010: Cap_1x1_COL
+    2300012: Corner_2x2
+    2300014: Corner_2x2_COL
+    2300016: Corner_Hook_3x2
+    2300018: Corner_Hook_3x2_COL
+    2300020: Curve_Edgy_4x4
+    2300022: Curve_Edgy_4x4_COL
+    2300024: Curve_Smooth_4x4
+    2300026: Curve_Smooth_4x4_COL
+    2300028: Diagonal_1x2
+    2300030: Diagonal_1x2_COL
+    2300032: Extra_Spotlight_1x1
+    2300034: Extra_Wall_Spotlight_1x1
+    2300036: Straight_2x1
+    2300038: Straight_2x1_COL
+    3300000: Block_1x1
+    3300002: Block_1x1_COL
+    3300004: Block_2x2
+    3300006: Block_2x2_COL
+    3300008: Cap_1x1
+    3300010: Cap_1x1_COL
+    3300012: Corner_2x2
+    3300014: Corner_2x2_COL
+    3300016: Corner_Hook_3x2
+    3300018: Corner_Hook_3x2_COL
+    3300020: Curve_Edgy_4x4
+    3300022: Curve_Edgy_4x4_COL
+    3300024: Curve_Smooth_4x4
+    3300026: Curve_Smooth_4x4_COL
+    3300028: Diagonal_1x2
+    3300030: Diagonal_1x2_COL
+    3300032: Extra_Spotlight_1x1
+    3300034: Extra_Wall_Spotlight_1x1
+    3300036: Straight_2x1
+    3300038: Straight_2x1_COL
+    4300000: Extra_Wall_Spotlight_1x1
+    4300002: Block_2x2
+    4300004: Block_2x2_COL
+    4300006: Curve_Edgy_4x4
+    4300008: Curve_Edgy_4x4_COL
+    4300010: Extra_Spotlight_1x1
+    4300012: Block_1x1
+    4300014: Block_1x1_COL
+    4300016: Cap_1x1
+    4300018: Cap_1x1_COL
+    4300020: Diagonal_1x2
+    4300022: Diagonal_1x2_COL
+    4300024: Corner_2x2
+    4300026: Corner_2x2_COL
+    4300028: Corner_Hook_3x2
+    4300030: Corner_Hook_3x2_COL
+    4300032: Straight_2x1
+    4300034: Straight_2x1_COL
+    4300036: Curve_Smooth_4x4
+    4300038: Curve_Smooth_4x4_COL
+    2186277476908879412: ImportLogs
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Wall
+    second: {fileID: 2100000, guid: fb86300d223dc2a4684b8d431dc6d80a, type: 2}
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 0
+    keepQuads: 0
+    weldVertices: 1
+    preserveHierarchy: 0
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+    previousCalculatedGlobalScale: 1
+    hasPreviousCalculatedGlobalScale: 0
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    serializedVersion: 2
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 0
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
