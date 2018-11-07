@@ -82,7 +82,7 @@ Material:
     m_Colors:
     - _Color: {r: 0.1, g: 0.1, b: 0.1, a: 1}
     - _ColorGreen: {r: 1, g: 0.674681, b: 0, a: 1}
-    - _ColorRed: {r: 0.4056604, g: 0.06706008, b: 0, a: 1}
+    - _ColorRed: {r: 0.40392157, g: 0.14107496, b: 0, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
     - _Specular: {r: 0.6886792, g: 0.6886792, b: 0.6886792, a: 0.88235295}
