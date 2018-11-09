@@ -8,8 +8,15 @@ public class PlayerPhysics : MonoBehaviour {
 	public Rigidbody2D rBody;
 	public float maxRpm = 30.0f;
 	public float maxTorque = 15.0f;
+	[Space]
+	public float jumpHeight = 4.0f;
+	public float jumpCooldown = 0.2f;
 
-	public Player player;
+	Player player;
+
+	Vector2 jumpDir = Vector2.up;
+	public bool isGrounded = false;
+	float jumpTimer = 0;
 
 	// Use this for initialization
 	void Start ()
@@ -22,15 +29,29 @@ public class PlayerPhysics : MonoBehaviour {
 	// Update is called once per frame
 	void FixedUpdate ()
 	{
+		GetGroundHit();
+		
 		float moveInput = 0;
 
 		bool goLeft = player.GetButton("Move Left");
 		bool goRight = player.GetButton("Move Right");
 		bool goBoth = goLeft && goRight;
 
-		if(goBoth)
+		if(goBoth) { goLeft = goRight = false; }
+
+		if(jumpTimer > 0)
 		{
-			//Debug.DrawRay(rBody.position, Vector3.up * 3, Color.cyan);
+			jumpTimer -= Time.fixedDeltaTime;
+			goBoth = false;
+		}
+
+		if(goBoth && isGrounded)
+		{
+			rBody.AddForce(jumpDir * Mathf.Sqrt(2 * jumpHeight * -Physics.gravity.y * rBody.gravityScale), ForceMode2D.Impulse);
+			
+			jumpTimer = jumpCooldown;
+
+			Debug.DrawRay(rBody.position, jumpDir, Color.HSVToRGB(Random.Range(0f, 1f), 1, 1), 5, false);
 		}
 		else if(goLeft && rBody.angularVelocity < maxRpm * 60)
 		{
@@ -43,49 +64,42 @@ public class PlayerPhysics : MonoBehaviour {
 			//Debug.DrawRay(rBody.position, Vector3.right * 3, Color.green);
 		}
 
-		rBody.AddTorque(moveInput * maxTorque, ForceMode2D.Force);
-		//rBody.angularVelocity = Mathf.Clamp(rBody.angularVelocity, -maxRpm * 60, maxRpm * 60);
+		if(moveInput != 0)
+		{
+			rBody.AddTorque(moveInput * maxTorque, ForceMode2D.Force);
+		}
+		
+	}
 
-		Vector3 hitDir = Vector3.zero;
-		bool gotHit = false;
-		// for (int i = 0; i < 20; i++)
-		// {
+	void GetGroundHit()
+	{
+		
+		isGrounded = false;
 
-		// 	Vector2 rayDir = new Vector2(Mathf.Sin((1f / 20) * i * Mathf.PI), Mathf.Cos((1f / 20) * i * Mathf.PI));
-		// 	RaycastHit2D[] rHits = Physics2D.RaycastAll(rBody.position, rayDir, 0.6f);
-
-		// 	float hitDist = 0.6f;
-		// 	Vector2 dirToAdd = Vector2.zero;
-		// 	bool validHit = false;
-		// 	for (int j = 0; j < rHits.Length; j++)
-		// 	{
-		// 		if(rHits[j].distance < hitDist && !rHits[j].collider.transform.IsChildOf(transform))
-		// 		{
-		// 			dirToAdd = rHits[j].normal;
-		// 			hitDist = rHits[j].distance;
-		// 			gotHit = true;
-		// 			validHit = true;
-		// 		}
-		// 	}
-
-		// 	if(validHit)
-		// 	{
-		// 		hitDir += new Vector3(dirToAdd.x, dirToAdd.y, 0);
-		// 	}
-
-		// }
 		ContactPoint2D[] points = new ContactPoint2D[8];
 		rBody.GetContacts(points);
-
-		gotHit = points.Length > 0;
+		
+		int contacts = 0;
 		for (int i = 0; i < points.Length; i++)
 		{
+			if(points[i].collider != null) contacts++;
+		}
+
+		isGrounded = contacts > 0;
+		Vector3 hitDir = Vector3.zero;
+		for (int i = 0; i < contacts; i++)
+		{
+			if(points[i].collider == null) continue;
+
 			hitDir += new Vector3(points[i].normal.x, points[i].normal.y, 0);
 		}
 
-		if(gotHit)
+		jumpDir = hitDir.normalized;
+		jumpDir = (jumpDir + Vector2.up).normalized;
+
+		if(isGrounded)
 		{
-			Debug.DrawRay(rBody.position, hitDir * 3, Color.green);
+			Debug.DrawRay(rBody.position, jumpDir, Color.cyan);
 		}
 	}
 }
