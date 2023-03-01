@@ -1,0 +1,45 @@
+﻿///////////////////////////////
+// Better Lit Shader
+// © Jason Booth, 2021
+///////////////////////////////
+
+// Lit Shader
+
+BEGIN_OPTIONS
+   ShaderName "Better Lit/Development/Lit"
+   CustomEditor "JBooth.BetterShaders.BetterShaderMaterialGUI"
+END_OPTIONS
+
+BEGIN_PROPERTIES
+   [HideInInspector]_HideUnused("Hide unused options", Float) = 0
+END_PROPERTIES
+
+BEGIN_SUBSHADERS
+   "LitBase-Dev.surfshader"
+   "StackableShapeEffector.surfshader"
+   "StackableTintMask.surfshader"
+   "StackableVertexTint.surfshader"
+   "StackableTextureLayerWeightProvider.surfshader"
+   "StackableTextureLayer.surfshader"
+   "StackableTextureLayer.surfshader"
+   "StackableTextureLayer.surfshader"
+   "StackableTextureLayer.surfshader"
+   "StackableMultiMatCap.surfshader"
+   "StackableCheapSSSResolve.surfshader"
+   "StackableTrax.surfshader"
+   "StackablePuddles.surfshader"
+   "StackableSnow.surfshader"
+   "StackableWind.surfshader"
+   "Stackable6SideTint.surfshader"
+   "StackableDoubleSided.surfshader"
+   "StackableNormalFinalizer.surfshader"
+   "StackableDebugView.surfshader"
+   "StackableDissolve.surfshader"
+   "StackableWireframe.surfshader"
+   "StackableDitherFadeLOD.surfshader"
+   "StackableVegetationStudioInstancing.surfshader"
+   "StackableBakery.surfshader"
+   "StackableHDRPExtra.surfshader"
+END_SUBSHADERS
+
+

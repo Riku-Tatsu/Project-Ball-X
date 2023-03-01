@@ -1,0 +1,116 @@
+﻿///////////////////////////////
+// Better Lit Shader
+// © Jason Booth, 2021
+///////////////////////////////
+
+// requires barycentrics in packed texcoord.w to work.
+
+BEGIN_OPTIONS
+   ShaderName "Hidden/Better Lit/Dev/StackableWireframe"
+   CustomEditor "JBooth.BetterShaders.BetterShaderMaterialGUI"
+   SubEditor "StackableWireframeEditor"
+   ExtraV2F0Require "_WIREFRAME || _DEBUG_BARYCENTRICS" 
+END_OPTIONS
+
+
+BEGIN_PROPERTIES
+    [KeywordEnum(LocalSpace, WorldSpace)] _Wire("Wire Space", Float) = 0
+    _WireSmoothing("Wire Smoothing", Range(0.01, 10)) = 0.5
+    _WireThickness("Wire Thickness", Range(0.01, 10)) = 0.5
+
+    [KeywordEnum(None, Blend, Mult2X)] _WireAlbedo("Albedo Mode", Float) = 0
+	_WireColor ("Wire Color", Color) = (0, 1, 0, 1)
+    [KeywordEnum(None, Blend, Mult2X)] _WireEmis("Emission Mode", Float) = 0
+    _WireEmissive("Wire Emissive", Color) = (0,0,0,0)
+    [KeywordEnum(None, Alpha, Cutout)] _WireAlpha("Alpha Mode", Float) = 0
+    [Toggle(_WIREUSEEFFECTOR)] _WireUseEffector("Use Effector", Float) = 0
+    [MaterialToggle]_WireEffectorInvert("Invert", Float) = 0
+END_PROPERTIES
+
+BEGIN_DEFINES
+    #pragma shader_feature_local _ _WIREFRAME
+    #pragma shader_feature_local_fragment _ _WIRE_WORLDSPACE
+    #pragma shader_feature_local_fragment _ _WIREALBEDO_BLEND _WIREALBEDO_MULT2X
+    #pragma shader_feature_local_fragment _ _WIREEMIS_BLEND _WIREEMIS_MULT2X
+    #pragma shader_feature_local_fragment _ _WIREALPHA_ALPHA _WIREALPHA_CUTOUT
+    #pragma shader_feature_local_fragment _ _WIREUSEEFFECTOR
+END_DEFINES
+
+BEGIN_CBUFFER
+    //=#if _WIREFRAME
+	    half4 _WireColor;
+        half4 _WireEmissive;
+        float _WireSmoothing;
+        float _WireThickness;
+        int _WireEffectorInvert;
+    //#endif
+END_CBUFFER
+
+BEGIN_SUBSHADERS
+   "FunctionLibrary.surfshader"
+END_SUBSHADERS
+
+BEGIN_CODE
+
+#if _WIREFRAME
+	float Wireframe(float3 bary)
+    {
+        #if _WIRE_WORLDSPACE
+            float3 deltas = fwidth(bary);
+            float3 smoothing = deltas * _WireSmoothing;
+            float3 thickness = deltas * _WireThickness;
+            bary = smoothstep(thickness, thickness + smoothing, bary);
+            float mw = min(bary.x, min(bary.y, bary.z));
+        #else
+            float mw = min(bary.x, min(bary.y, bary.z));
+            mw = smoothstep(0, _WireThickness, mw);
+            mw = pow(abs(mw), _WireSmoothing);
+        #endif
+
+        return 1.0 - mw;
+    }
+#endif
+
+    void ModifyVertex(inout VertexData v, inout ExtraV2F d)
+    {
+        #if _WIREFRAME || _DEBUG_BARYCENTRICS
+            d.extraV2F0.xyz = DecodePackedToFloat4(v.texcoord0.w).xyz;
+        #endif
+    }
+
+	void SurfaceFunction(inout Surface o, ShaderData d)
+	{
+
+        #if _WIREFRAME
+            float wire = Wireframe(d.extraV2F0.xyz);
+
+            #if _WIREUSEEFFECTOR && HASEFFECTOR
+                if (_WireEffectorInvert < 0.5)
+                    wire *= d.blackboard.effectorWeight;
+                else
+                    wire *= 1.0 - d.blackboard.effectorWeight;
+            #endif
+
+            #if _WIREALBEDO_BLEND
+                o.Albedo = lerp(o.Albedo, _WireColor.rgb, wire);
+            #elif _WIREALBEDO_MULT2X
+                o.Albedo = lerp(o.Albedo, o.Albedo * _WireColor.rgb * 2, wire);
+            #endif
+
+            #if _WIREEMIS_BLEND
+                o.Emission = lerp(o.Emission, _WireEmissive.rgb, wire);
+            #elif _WIREEMIS_MULT2X
+                o.Emission = lerp(o.Emission, o.Emission * _WireEmissive.rgb * 2, wire);
+            #endif
+
+            #if _WIREALPHA_ALPHA
+                o.Alpha = lerp(0, 1, wire);
+            #elif _WIREALPHA_CUTOUT
+                clip(wire - 0.5);
+            #endif
+
+       #endif // wireframe
+	}
+
+END_CODE
+

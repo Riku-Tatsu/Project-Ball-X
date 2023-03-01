@@ -1,0 +1,42 @@
+﻿///////////////////////////////
+// Better Lit Shader
+// © Jason Booth, 2021
+///////////////////////////////
+
+// Lit Tessellation stack
+
+BEGIN_OPTIONS
+   ShaderName "Better Lit/Development/Lit Tessellation"
+   CustomEditor "JBooth.BetterShaders.BetterShaderMaterialGUI"
+   SubEditor "LitTessellationMaterialEditor"
+END_OPTIONS
+
+
+BEGIN_SUBSHADERS
+   "LitTessellationBase-Dev.surfshader"
+   "StackableShapeEffector.surfshader"
+   "StackableTintMask.surfshader"
+   "StackableVertexTint.surfshader"
+   "StackableTextureLayerWeightProvider.surfshader"
+   "StackableTextureLayer.surfshader"
+   "StackableTextureLayer.surfshader"
+   "StackableTextureLayer.surfshader"
+   "StackableTextureLayer.surfshader"
+   "StackableMultiMatCap.surfshader"
+   "StackableCheapSSSResolve.surfshader"
+   "StackableTrax.surfshader"
+   "StackablePuddles.surfshader"
+   "StackableSnow.surfshader"
+   "StackableWind.surfshader"
+   "Stackable6SideTint.surfshader"
+   "StackableDoubleSided.surfshader"
+   "StackableNormalFinalizer.surfshader"
+   "StackableDebugView.surfshader"
+   "StackableDissolve.surfshader"
+   "StackableWireframe.surfshader"
+   "StackableDitherFadeLOD.surfshader"
+   "StackableVegetationStudioInstancing.surfshader"
+   "StackableBakery.surfshader"
+   "StackableHDRPExtra.surfshader"
+END_SUBSHADERS
+

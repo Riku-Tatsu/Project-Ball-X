@@ -1,0 +1,44 @@
+
+BEGIN_OPTIONS
+	ShaderName "Hidden/Better Lit/Dev/StackableVertexTint" 
+	CustomEditor "JBooth.BetterShaders.BetterShaderMaterialGUI"
+	SubEditor "StackableVertexTintEditor"
+
+	VertexColorRequire "_VERTEXTINT"
+END_OPTIONS
+
+
+BEGIN_PROPERTIES
+	[KeywordEnum(None, Mult, Mult2X, Overlay)] _VertexColor("Vertex Color Blend", Float) = 0
+	[KeywordEnum(None, Occlusion, Albedo)] _VertexAO("Vertex AO Target", Float) = 0
+END_PROPERTIES
+
+BEGIN_DEFINES
+	#pragma shader_feature_local _ _VERTEXTINT // component on/off
+	#pragma shader_feature_local_fragment _ _VERTEXCOLOR_MULT _VERTEXCOLOR_MULT2X _VERTEXCOLOR_OVERLAY
+	#pragma shader_feature_local_fragment _ _VERTEXAO_OCCLUSION _VERTEXAO_ALBEDO
+END_DEFINES 
+
+
+BEGIN_CODE
+
+	void SurfaceFunction(inout Surface o, ShaderData d)
+	{
+		#if _VERTEXTINT
+			#if _VERTEXCOLOR_MULT
+				o.Albedo *= d.vertexColor.rgb;
+			#elif _VERTEXCOLOR_MULT2X
+				o.Albedo *= d.vertexColor.rgb * 2;
+			#elif _VERTEXCOLOR_OVERLAY
+				o.Albedo < 0.5 ? (2.0 * o.Albedo * d.vertexColor.rgb) : (1.0 - 2.0 * (1.0 - o.Albedo) * (1.0 - d.vertexColor.rgb));
+			#endif
+			#if _VERTEXAO_OCCLUSION
+				o.Occlusion *= d.vertexColor.a;
+			#elif _VERTEXAO_ALBEDO
+				o.Albedo *= d.vertexColor.a;
+			#endif
+		#endif
+	}	
+
+END_CODE
+

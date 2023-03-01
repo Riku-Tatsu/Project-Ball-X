@@ -1,0 +1,54 @@
+﻿///////////////////////////////
+// Better Lit Shader
+// © Jason Booth, 2021
+///////////////////////////////
+
+BEGIN_OPTIONS
+   ShaderName "Hidden/Better Lit/Dev/StackableCheapSSSResolve"
+END_OPTIONS
+
+
+BEGIN_CODE
+
+    half3 ComputeSSS(float3 V, float3 N, half3 tint, half thickness, half distortion, half scale, half power)
+    {
+        float3 L;
+        float3 lightColor;
+        GetSun(L, lightColor);
+        float3 H = normalize(L + N * distortion);
+        float VdotH = pow(saturate(dot(V, -H)), power) * scale;
+        float3 I =  (VdotH) * thickness;
+        return lightColor * I * tint;
+    }
+
+	void SurfaceFunction(inout Surface o, ShaderData d)
+	{
+       #if _CHEAPSSS && BETTERLITBASE && !_PASSSCENESELECT
+		  float3 normal = o.Normal;
+
+		  #if _SURFACEGRADIENT
+			  normal = ResolveNormalFromSurfaceGradient(d, o.Normal);
+	      #elif _AUTONORMAL
+              float3 dx = ddx(d.worldSpacePosition);
+              float3 dy = ddy(d.worldSpacePosition);
+              float3 crossX = cross(float3(0,1,0), dx);
+              float3 crossY = cross(float3(0,1,0), dy);
+              float3 dt = abs(dot(crossY, dx));
+              float height = _AutoNormalStrength * 0.5 * o.Alpha;
+              float3 n = ((((height + ddx(height)) - height) * crossY) + (((height + ddy(height)) - height) * crossX)) * sign(dt);
+              n.y *= -1.0;
+              normal = normalize((dt * float3(0,1,0)) - n).xzy;
+              normal = (TangentToWorldSpace(d, normal));
+		  #else
+			  normal = (TangentToWorldSpace(d, o.Normal));
+		  #endif
+
+          o.Emission += ComputeSSS(d.worldSpaceViewDir, normal,
+                                    d.blackboard.cheapSSSTintThickness.rgb,
+                                    d.blackboard.cheapSSSTintThickness.a,
+                                    _CheapSSSDistortion, _CheapSSSScale, _CheapSSSPower);
+       #endif
+	}
+
+END_CODE
+

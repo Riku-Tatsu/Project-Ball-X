@@ -1,0 +1,351 @@
+﻿// expects an input albedo of 1, so this acts as a complex tint
+
+BEGIN_OPTIONS
+   ShaderName "Hidden/Better Stylized/Dev/Stackable6SidedTint"
+   CustomEditor "JBooth.BetterShaders.BetterShaderMaterialGUI"
+   SubEditor "Stackable6SidedColorEditor"
+END_OPTIONS
+
+BEGIN_SUBSHADERS
+   "FunctionLibrary.surfshader"
+END_SUBSHADERS
+
+BEGIN_PROPERTIES
+	_GradientX("Gradient Positive X", 2D) = "white" {}
+	_GradientY("Gradient Positive Y", 2D) = "white" {}
+	_GradientZ("Gradient Positive Z", 2D) = "white" {}
+	_GradientNX("Gradient Negative X", 2D) = "white" {}
+	_GradientNY("Gradient Negative Y", 2D) = "white" {}
+	_GradientNZ("Gradient Negative Z", 2D) = "white" {}
+	
+	_ColorX("Color X", Color) = (1,1,1,1)
+	_ColorY("Color Y", Color) = (1,1,1,1)
+	_ColorZ("Color Z", Color) = (1,1,1,1)
+	_ColorNX("Color NX", Color) = (1,1,1,1)
+	_ColorNY("Color NY", Color) = (1,1,1,1)
+	_ColorNZ("Color NZ", Color) = (1,1,1,1)
+	_ColorX2("Color X", Color) = (1,1,1,1)
+	_ColorY2("Color Y", Color) = (1,1,1,1)
+	_ColorZ2("Color Z", Color) = (1,1,1,1)
+	_ColorNX2("Color NX", Color) = (1,1,1,1)
+	_ColorNY2("Color NY", Color) = (1,1,1,1)
+	_ColorNZ2("Color NZ", Color) = (1,1,1,1)
+	_ColorXRange("Color X Range", Vector) = (0, 1, 0, 0)
+	_ColorYRange("Color Y Range", Vector) = (0, 1, 0, 0)
+	_ColorZRange("Color Z Range", Vector) = (0, 1, 0, 0)
+	_ColorNXRange("Color X Range", Vector) = (0, 1, 0, 0)
+	_ColorNYRange("Color Y Range", Vector) = (0, 1, 0, 0)
+	_ColorNZRange("Color Z Range", Vector) = (0, 1, 0, 0)
+	_TextureClampX("Clamp Range for textures", Vector) = (0.001,0.999,0.001,0.999)
+	_TextureClampY("Clamp Range for textures", Vector) = (0.001,0.999,0.001,0.999)
+	_TextureClampZ("Clamp Range for textures", Vector) = (0.001,0.999,0.001,0.999)
+	_TextureClampNX("Clamp Range for textures", Vector) = (0.001,0.999,0.001,0.999)
+	_TextureClampNY("Clamp Range for textures", Vector) = (0.001,0.999,0.001,0.999)
+	_TextureClampNZ("Clamp Range for textures", Vector) = (0.001,0.999,0.001,0.999)
+
+	_6SidedAngleContrast("Angle Blend", Range(0.5,4)) = 2
+	[KeywordEnum(RGB, HSV, OKLAB)] _6SidedSpace("Color Space", Float) = 0
+
+END_PROPERTIES
+
+BEGIN_DEFINES
+	#pragma shader_feature_local_fragment _ _6TINT
+	#pragma shader_feature_local_fragment _ _POSX_COLOR _POSX_TEXTURE _POSX_GRADIENT
+	#pragma shader_feature_local_fragment _ _POSY_COLOR _POSY_TEXTURE _POSY_GRADIENT
+	#pragma shader_feature_local_fragment _ _POSZ_COLOR _POSZ_TEXTURE _POSZ_GRADIENT
+	#pragma shader_feature_local_fragment _ _NEGX_COLOR _NEGX_TEXTURE _NEGX_GRADIENT
+	#pragma shader_feature_local_fragment _ _NEGY_COLOR _NEGY_TEXTURE _NEGY_GRADIENT
+	#pragma shader_feature_local_fragment _ _NEGZ_COLOR _NEGZ_TEXTURE _NEGZ_GRADIENT
+    #pragma shader_feature_local_fragment _ _6SIDEDSPACE_HSV _6SIDEDSPACE_OKLAB
+	#pragma shader_feature_local_fragment _ _6SIDEBLEND_MULT2X _6SIDEBLEND_OVERLAY
+END_DEFINES
+
+BEGIN_CBUFFER
+//#if _6TINT
+	half3 _ColorX;
+	half3 _ColorY;
+	half3 _ColorZ;
+	half3 _ColorNX;
+	half3 _ColorNY;
+	half3 _ColorNZ;
+	half3 _ColorX2;
+	half3 _ColorY2;
+	half3 _ColorZ2;
+	half3 _ColorNX2;
+	half3 _ColorNY2;
+	half3 _ColorNZ2;
+	float4 _ColorXRange;
+	float4 _ColorYRange;
+	float4 _ColorZRange;
+	float4 _ColorNXRange;
+	float4 _ColorNYRange;
+	float4 _ColorNZRange;
+	half _6SidedAngleContrast;
+	half4 _TextureClampX;
+	half4 _TextureClampY;
+	half4 _TextureClampZ;
+	half4 _TextureClampNX;
+	half4 _TextureClampNY;
+	half4 _TextureClampNZ;
+//#endif
+
+END_CBUFFER
+
+
+BEGIN_CODE
+#if _6TINT
+	TEXTURE2D(_GradientX);
+	TEXTURE2D(_GradientY);
+	TEXTURE2D(_GradientZ);
+	TEXTURE2D(_GradientNX);
+	TEXTURE2D(_GradientNY);
+	TEXTURE2D(_GradientNZ);
+#endif
+
+	half3 GammaToLinear6 (half3 sRGB)
+	{
+		return sRGB * (sRGB * (sRGB * 0.305306011 + 0.682171111) + 0.012522878);
+	}
+
+	half3 LinearToGamma6 (half3 linRGB)
+	{
+		linRGB = max(linRGB, half3(0, 0, 0));
+		return max(1.055 * pow(linRGB, 0.416666667) - 0.055, 0);
+	}
+
+	float2 GetMappedUVGrad(float2 proj, float4 range)
+    {
+		float2 uv = proj;
+		uv.y = (uv.y - range.x) / range.y;
+		uv = RotateUV(uv, range.z);
+        uv.y = saturate(uv.y);
+		return uv;
+    }
+
+	float2 GetMappedUVTex(float2 proj, float4 range, float2 clampRange)
+	{
+		float2 uv = proj.yx;
+		uv.x = (uv.x - range.x) / range.y;
+		uv.y /= range.y;
+		uv = clamp(uv, clampRange.x, clampRange.y);
+		uv = RotateUV(uv, range.z);
+		uv = clamp(uv, clampRange.x, clampRange.y);
+		return uv;
+	}
+
+	half3 GradientLerp(half3 c1, half3 c2, float grad)
+	{
+		#if UNITY_COLORSPACE_GAMMA
+			c2 = GammaToLinear6(c2);
+		#endif
+		#if _6SIDEDSPACE_HSV
+			c2 = RGBtoHSV(c2);
+		#elif _6SIDEDSPACE_OKLAB
+			c2 = RGBtoOklab(c2);
+		#endif
+		return lerp(c1, c2, grad);
+	}
+
+	void SurfaceFunction(inout Surface o, inout ShaderData d)
+	{
+		#if _6TINT
+			half3 normal = d.worldSpaceNormal;
+			half3 position = d.worldSpacePosition;
+			half3 localPosition = d.localSpacePosition;
+
+			half3 ns = normal * 0.5 + 0.5;
+			half init = 1;
+			#if _6SIDEBLEND_MULT2X || _6SIDEBLEND_OVERLAY
+				init = 0.5;
+			#endif
+
+			half3 gx = init;
+			half3 gy = init;
+			half3 gz = init;
+			half3 ngx = init;
+			half3 ngy = init;
+			half3 ngz = init;
+
+			#if _POSX_COLOR || _POSX_GRADIENT
+				gx = _ColorX;
+			#endif
+
+			#if _POSY_COLOR || _POSY_GRADIENT
+				gy = _ColorY;
+			#endif
+
+			#if _POSZ_COLOR || _POSY_GRADIENT
+				gz = _ColorZ;
+			#endif
+
+			#if _NEGX_COLOR || _NEGX_GRADIENT
+				ngx = _ColorNX;
+			#endif
+
+			#if _NEGY_COLOR || _NEGY_GRADIENT
+				ngy = _ColorNY;
+			#endif
+
+			#if _NEGZ_COLOR || _NEGZ_GRADIENT
+				ngz = _ColorNZ;
+			#endif
+
+
+			#if _POSX_GRADIENT
+				float2 xgrad = GetMappedUVGrad(_ColorXRange.w > 1.5 ? position.yz : _ColorXRange.w > 0.5 ? localPosition.yz : d.texcoord0.xy, _ColorXRange);
+			#endif
+
+			#if _POSY_GRADIENT
+				float2 ygrad = GetMappedUVGrad(_ColorYRange.w > 1.5 ? position.xz : _ColorYRange.w > 0.5 ? localPosition.xz : d.texcoord0.xy, _ColorYRange);
+			#endif
+
+			#if _POSZ_GRADIENT
+				float2 zgrad = GetMappedUVGrad(_ColorZRange.w > 1.5 ? position.yx : _ColorZRange.w > 0.5 ? localPosition.yx : d.texcoord0.xy, _ColorZRange);
+			#endif
+
+			#if _NEGX_GRADIENT
+				float2 nxgrad = GetMappedUVGrad(_ColorNXRange.w > 1.5 ? position.yz : _ColorNXRange.w > 0.5 ? localPosition.yz : d.texcoord0.xy, _ColorNXRange);
+			#endif
+
+			#if _NEGY_GRADIENT
+				float2 nygrad = GetMappedUVGrad(_ColorNYRange.w > 1.5 ? position.xz : _ColorNYRange.w > 0.5 ? localPosition.xz : d.texcoord0.xy, _ColorNYRange);
+			#endif
+
+			#if _NEGZ_GRADIENT
+				float2 nzgrad = GetMappedUVGrad(_ColorNZRange.w > 1.5 ? position.yx : _ColorNZRange.w > 0.5 ? localPosition.yx : d.texcoord0.xy, _ColorNZRange);
+			#endif
+
+
+			#if _POSX_TEXTURE
+				float2 xgrad = GetMappedUVTex(_ColorXRange.w > 1.5 ? position.yz : _ColorXRange.w > 0.5 ? localPosition.yz : d.texcoord0.xy, _ColorXRange, _TextureClampX.xy);
+			#endif
+
+			#if _POSY_TEXTURE
+				float2 ygrad = GetMappedUVTex(_ColorYRange.w > 1.5 ? position.zx : _ColorYRange.w > 0.5 ? localPosition.zx : d.texcoord0.xy, _ColorYRange, _TextureClampY.xy);
+			#endif
+
+			#if _POSZ_TEXTURE
+				float2 zgrad = GetMappedUVTex(_ColorZRange.w > 1.5 ? position.yx : _ColorZRange.w > 0.5 ? localPosition.yx : d.texcoord0.xy, _ColorZRange, _TextureClampZ.xy);
+			#endif
+
+			#if _NEGX_TEXTURE
+				float2 nxgrad = GetMappedUVTex(_ColorNXRange.w > 1.5 ? position.yz : _ColorNXRange.w > 0.5 ? localPosition.yz : d.texcoord0.xy, _ColorNXRange, _TextureClampNX.xy);
+			#endif
+
+			#if _NEGY_TEXTURE
+				float2 nygrad = GetMappedUVTex(_ColorNYRange.w > 1.5 ? position.zx : _ColorNYRange.w > 0.5 ? localPosition.zx : d.texcoord0.xy, _ColorNYRange, _TextureClampNY.xy);
+			#endif
+
+			#if _NEGZ_TEXTURE
+				float2 nzgrad = GetMappedUVTex(_ColorNZRange.w > 1.5 ? position.yx : _ColorNZRange.w > 0.5 ? localPosition.yx : d.texcoord0.xy, _ColorNZRange, _TextureClampNZ.xy);
+			#endif
+
+
+			#if _POSX_TEXTURE
+				gx = SAMPLE_TEXTURE2D(_GradientX, shared_linear_repeat_sampler, xgrad).rgb;
+			#endif
+			#if _POSY_TEXTURE
+				gy = SAMPLE_TEXTURE2D(_GradientY, shared_linear_repeat_sampler, ygrad).rgb;
+			#endif
+			#if _POSZ_TEXTURE
+				gz = SAMPLE_TEXTURE2D(_GradientZ, shared_linear_repeat_sampler, zgrad).rgb;
+			#endif
+
+			#if _NEGX_TEXTURE
+				ngx = SAMPLE_TEXTURE2D(_GradientNX, shared_linear_repeat_sampler, nxgrad).rgb;
+			#endif
+			#if _NEGY_TEXTURE
+				ngy = SAMPLE_TEXTURE2D(_GradientNY, shared_linear_repeat_sampler, nygrad).rgb;
+			#endif
+			#if _NEGZ_TEXTURE
+				ngz = SAMPLE_TEXTURE2D(_GradientNZ, shared_linear_repeat_sampler, nzgrad).rgb;
+			#endif
+
+			#if UNITY_COLORSPACE_GAMMA
+				gx = GammaToLinear6(gx);
+				gy = GammaToLinear6(gy);
+				gz = GammaToLinear6(gz);
+				ngx = GammaToLinear6(ngx);
+				ngy = GammaToLinear6(ngy);
+				ngz = GammaToLinear6(ngz);
+			#endif
+
+			#if _6SIDEDSPACE_HSV
+				gx = RGBtoHSV(gx);
+				gy = RGBtoHSV(gy);
+				gz = RGBtoHSV(gz);
+				ngx = RGBtoHSV(ngx);
+				ngy = RGBtoHSV(ngy);
+				ngz = RGBtoHSV(ngz);
+			#elif _6SIDEDSPACE_OKLAB
+				gx = RGBtoOklab(gx);
+				gy = RGBtoOklab(gy);
+				gz = RGBtoOklab(gz);
+				ngx = RGBtoOklab(ngx);
+				ngy = RGBtoOklab(ngy);
+				ngz = RGBtoOklab(ngz);
+			#endif
+
+			#if _POSX_GRADIENT
+				gx = GradientLerp(gx, _ColorX2, xgrad.y);
+			#endif
+
+			#if _POSY_GRADIENT
+				gy = GradientLerp(gy, _ColorY2, ygrad.y);
+			#endif
+
+			#if _POSZ_GRADIENT
+				gz = GradientLerp(gz, _ColorZ2, zgrad.y);
+			#endif
+
+			#if _NEGX_GRADIENT
+				ngx = GradientLerp(ngx, _ColorNX2, nxgrad.y);
+			#endif
+
+			#if _NEGY_GRADIENT
+				ngy = GradientLerp(ngy, _ColorNY2, nygrad.y); 
+			#endif
+
+			#if _NEGZ_GRADIENT
+				ngz = GradientLerp(ngz, _ColorNZ2, nzgrad.y);
+			#endif
+
+ 
+			half3 cx = lerp(ngx, gx, ns.x);
+			half3 cy = lerp(ngy, gy, ns.y);
+			half3 cz = lerp(ngz, gz, ns.z);
+
+			half3 an = abs(normal); 
+			an = pow(an, _6SidedAngleContrast);
+			an = an / (an.x + an.y + an.z);
+		
+			#if _6SIDEDSPACE_HSV
+				cx = HSVtoRGB(cx);
+				cy = HSVtoRGB(cy);
+				cz = HSVtoRGB(cz);
+			#elif _6SIDEDSPACE_OKLAB
+				cx = OklabtoRGB(cx);
+				cy = OklabtoRGB(cy);
+				cz = OklabtoRGB(cz);
+			#endif
+
+			half3 col = cx * an.x + cy * an.y + cz * an.z;
+
+			#if UNITY_COLORSPACE_GAMMA
+				col = LinearToGamma6(col);
+			#endif
+
+
+			#if _6SIDEBLEND_MULT2X
+				o.Albedo *= col * 2.0;
+			#elif _6SIDEBLEND_OVERLAY
+				o.Albedo = o.Albedo < 0.5 ? (2.0 * o.Albedo * col) : (1.0 - 2.0*(1.0 - o.Albedo) * (1.0 - col));
+			#else
+				o.Albedo *= col;
+			#endif
+			
+		#endif
+	}
+
+END_CODE
+

@@ -1,0 +1,43 @@
+// adds HDRP specific options
+
+BEGIN_PROPERTIES
+	[Toggle(_ENABLE_GEOMETRIC_SPECULAR_AA)] _EnableGeometrySpecAA ("Enable Geometric Specular AA", Float) = 0
+	_SpecularAAScreenSpaceVariance("Screen Space Variance", Range(0, 1)) = 0.2
+	_SpecularAAThreshold ("Threshold", Range(0, 1)) = 0.1
+	[Toggle(_DISABLE_DECALS)] _DisableDecals ("Disable Decals", Float) = 0
+	[Toggle(_DISABLE_SSR)] _DisableSSR ("Disable SSR", Float) = 0
+	[Toggle(_WRITE_TRANSPARENT_MOTION_VECTOR)] _WriteTransparentMotionVector ("Write Transparent Motion Vectors", Float) = 0
+	[Toggle(_ADD_PRECOMPUTED_VELOCITY)] _AddPrecomputedVelocity ("Add Precomputed Velocity", Float) = 0
+	
+END_PROPERTIES
+
+BEGIN_DEFINES
+	#pragma shader_feature_local_fragment _ _ENABLE_GEOMETRIC_SPECULAR_AA
+	#pragma shader_feature_local_fragment _ _DISABLE_DECALS
+    #pragma shader_feature_local_fragment _ _DISABLE_SSR
+	#pragma shader_feature_local _ _WRITE_TRANSPARENT_MOTION_VECTOR
+	#pragma shader_feature_local _ _ADD_PRECOMPUTED_VELOCITY
+END_DEFINES
+
+BEGIN_CBUFFER
+	//#if _ENABLE_GEOMETRIC_SPECULAR_AA
+		float _SpecularAAScreenSpaceVariance;
+		float _SpecularAAThreshold;
+	//#endif
+END_CBUFFER
+
+
+
+
+BEGIN_CODE
+
+	void SurfaceFunction(inout Surface o, ShaderData d)
+	{
+		#if _ENABLE_GEOMETRIC_SPECULAR_AA
+			o.SpecularAAThreshold = _SpecularAAThreshold;
+			o.SpecularAAScreenSpaceVariance = _SpecularAAScreenSpaceVariance;
+		#endif
+	}
+
+END_CODE
+

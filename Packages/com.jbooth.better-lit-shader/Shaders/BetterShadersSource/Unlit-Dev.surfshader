@@ -1,0 +1,41 @@
+///////////////////////////////
+// Better Lit Shader
+// © Jason Booth, 2021
+///////////////////////////////
+
+// Unlit Shader
+
+BEGIN_OPTIONS
+   ShaderName "Better Lit/Development/Unlit"
+   CustomEditor "JBooth.BetterShaders.BetterShaderMaterialGUI"
+   Workflow "Unlit"
+END_OPTIONS
+
+
+BEGIN_SUBSHADERS
+   "LitBase-Dev.surfshader"
+   "StackableShapeEffector.surfshader"
+   "StackableTintMask.surfshader"
+   "StackableVertexTint.surfshader"
+   "StackableTextureLayerWeightProvider.surfshader"
+   "StackableTextureLayer.surfshader"
+   "StackableTextureLayer.surfshader"
+   "StackableTextureLayer.surfshader"
+   "StackableMultiMatCap.surfshader"
+   "StackableTrax.surfshader"
+   "StackablePuddles.surfshader"
+   "StackableSnow.surfshader"
+   "StackableWind.surfshader"
+   "Stackable6SideTint.surfshader"
+   "StackableDoubleSided.surfshader"
+   "StackableNormalFinalizer.surfshader"
+   "StackableDebugView.surfshader"
+   "StackableDissolve.surfshader"
+   "StackableWireframe.surfshader"
+   "StackableDitherFadeLOD.surfshader"
+   "StackableVegetationStudioInstancing.surfshader"
+   "StackableBakery.surfshader"
+   "StackableHDRPExtra.surfshader"
+END_SUBSHADERS
+
+

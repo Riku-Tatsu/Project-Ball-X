@@ -1,0 +1,105 @@
+﻿///////////////////////////////
+// Better Lit Shader
+// © Jason Booth, 2021
+///////////////////////////////
+
+// lets you debug sample counts. All samples in Better Lit are instrumented with the COUNTSAMPLES macro,
+// which this lets you visualize. Macro is in the FunctionLibrary.
+
+
+BEGIN_OPTIONS
+   ShaderName "Hidden/Better Lit/Dev/StackableDebugView"
+   CustomEditor "JBooth.BetterShaders.BetterShaderMaterialGUI"
+   SubEditor "StackableDebugViewMaterialEditor"
+
+   VertexColorRequire "_DEBUG_VERTEXCOLOR"
+
+END_OPTIONS
+
+BEGIN_SUBSHADERS
+   "FunctionLibrary.surfshader"
+END_SUBSHADERS
+
+BEGIN_DEFINES
+   #pragma shader_feature_local _ _DEBUG_SAMPLECOUNT _DEBUG_BARYCENTRICS _DEBUG_SHAPEWEIGHTMASK _DEBUG_VERTEXCOLOR _DEBUG_WORLDNORMAL _DEBUG_WORLDTANGENT _DEBUG_UV0 _DEBUG_FINALALBEDO _DEBUG_FINALNORMALTANGENT _DEBUG_FINALNORMALWORLD _DEBUG_FINALSMOOTHNESS _DEBUG_FINALAO _DEBUG_FINALMETALLIC _DEBUG_FINALEMISSION
+END_DEFINES
+
+BEGIN_PROPERTIES
+	_DebugSampleCountThreshold ("Debug Sample Threshold", Int) = 12
+END_PROPERTIES
+
+BEGIN_CBUFFER
+	//#if _DEBUG_SAMPLECOUNT
+		int _DebugSampleCountThreshold;
+	//#endif
+END_CBUFFER
+
+
+BEGIN_CODE
+	void DebugClear(inout Surface o)
+	{
+		o.Normal = half3(0, 0, 1);
+		o.Smoothness = 0;
+		o.Occlusion = 1;
+		o.Metallic = 0;
+		o.Specular = 0;
+		o.Emission = 0;
+		o.CoatMask = 0;
+        o.CoatSmoothness = 1;
+	}
+	void DebugData(inout Surface o, half v)  { DebugClear(o); o.Albedo = saturate(o.Albedo + 1) * v; }
+	void DebugData(inout Surface o, half2 v) { DebugClear(o); o.Albedo = saturate(o.Albedo + 1) * half3(v.rg, 0); }
+	void DebugData(inout Surface o, half3 v) { DebugClear(o); o.Albedo = saturate(o.Albedo + 1) * v.rgb; }
+	void DebugData(inout Surface o, half4 v) { DebugClear(o); o.Albedo = saturate(o.Albedo + 1) * v.rgb; }
+
+	void SurfaceFunction(inout Surface o, ShaderData d)
+	{
+		#if _DEBUG_SHAPEWEIGHTMASK
+			DebugData(o, d.blackboard.effectorWeight);
+		#elif _DEBUG_BARYCENTRICS
+			DebugData(o, d.extraV2F0.xyz);
+		#elif _DEBUG_SAMPLECOUNT
+			if (_sampleCount > _DebugSampleCountThreshold)
+			{
+				o.Albedo.r = 1;
+				o.Albedo.gb *= 0.2;
+			}
+			else
+			{
+				o.Albedo.b = 1;
+			}
+        #elif _DEBUG_VERTEXCOLOR
+        	DebugData(o, d.vertexColor.rgb);
+        #elif _DEBUG_WORLDNORMAL
+        	DebugData(o, d.TBNMatrix[2].xyz);
+        #elif _DEBUG_WORLDTANGENT
+        	DebugData(o, d.TBNMatrix[0].xyz);
+        #elif _DEBUG_UV0 
+        	DebugData(o, d.texcoord0.xyz);
+        #elif _DEBUG_FINALALBEDO 
+        	DebugData(o, o.Albedo);
+        #elif _DEBUG_FINALNORMALTANGENT 
+        	#if _WORLDSPACENORMAL
+        		DebugData(o, WorldToTangentSpace(d, o.Normal) * 0.5 + 0.5);
+        	#else
+        		DebugData(o, o.Normal * 0.5 - 0.5);
+        	#endif
+        #elif _DEBUG_FINALNORMALWORLD
+        	#if _WORLDSPACENORMAL
+        		DebugData(o, o.Normal);
+        	#else
+        		DebugData(o, TangentToWorldSpace(d, o.Normal));
+        	#endif
+        #elif _DEBUG_FINALSMOOTHNESS 
+        	DebugData(o, o.Smoothness);
+        #elif _DEBUG_FINALAO 
+        	DebugData(o, o.Occlusion);
+        #elif _DEBUG_FINALMETALLIC 
+        	DebugData(o, o.Metallic);
+        #elif _DEBUG_FINALEMISSION
+        	DebugData(o, o.Emission);
+        #endif
+	}
+
+END_CODE
+

@@ -1,0 +1,162 @@
+
+BEGIN_OPTIONS
+   ShaderName "Hidden/Better Lit/Dev/StackableMultiMatCap"
+   CustomEditor "JBooth.BetterShaders.BetterShaderMaterialGUI"
+   SubEditor "StackableMultiMatCapEditor"
+END_OPTIONS
+
+BEGIN_SUBSHADERS
+   "FunctionLibrary.surfshader"
+END_SUBSHADERS
+
+BEGIN_PROPERTIES
+	_MainMatcap("Main Matcap", 2D) = "white" {}
+	_Layer0Matcap("Layer0 Matcap", 2D) = "white" {}
+	_Layer1Matcap("Layer1 Matcap", 2D) = "white" {}
+	_Layer2Matcap("Layer2 Matcap", 2D) = "white" {}
+	_Layer3Matcap("Layer3 Matcap", 2D) = "white" {}
+END_PROPERTIES
+
+BEGIN_DEFINES
+   #pragma shader_feature_local_fragment _ _USEMATCAP
+   #pragma shader_feature_local_fragment _ _USEGLOBALMATCAP
+   #pragma shader_feature_local_fragment _ _MULTIMATCAP
+   #pragma shader_feature_local_fragment _ _MAINMATCAP
+   #pragma shader_feature_local_fragment _ _LAYER0MATCAP
+   #pragma shader_feature_local_fragment _ _LAYER1MATCAP
+   #pragma shader_feature_local_fragment _ _LAYER2MATCAP
+   #pragma shader_feature_local_fragment _ _LAYER3MATCAP
+END_DEFINES
+
+BEGIN_CODE
+
+	TEXTURE2D(_MainMatcap);
+	TEXTURE2D(_Layer0Matcap);
+	TEXTURE2D(_Layer1Matcap);
+	TEXTURE2D(_Layer2Matcap);
+	TEXTURE2D(_Layer3Matcap);
+	TEXTURE2D(_GMainMatcap);
+	TEXTURE2D(_GLayer0Matcap);
+	TEXTURE2D(_GLayer1Matcap);
+	TEXTURE2D(_GLayer2Matcap);
+	TEXTURE2D(_GLayer3Matcap);
+
+	void SurfaceFunction(inout Surface o, ShaderData d)
+	{
+		#if _USEMATCAP
+			float3 up = mul((float3x3)UNITY_MATRIX_I_V, float3(0,1,0));
+			float3 right = normalize(cross(up, d.worldSpaceViewDir));
+			up = cross(d.worldSpaceViewDir, right);
+			half3 wsNormal = TangentToWorldSpace(d, o.Normal);
+			float2 matcapUV = mul(float3x3(right, up, d.worldSpaceViewDir), wsNormal).xy;
+			matcapUV = matcapUV * 0.5 + 0.5;
+			#if !_MULTIMATCAP && _UNLIT
+				#if _USEGLOBALMATCAP
+					half3 matcap = SAMPLE_TEXTURE2D(_GMainMatcap, shared_linear_clamp_sampler, matcapUV).rgb;
+				#else
+					half3 matcap = SAMPLE_TEXTURE2D(_MainMatcap, shared_linear_clamp_sampler, matcapUV).rgb;
+				#endif
+				o.Albedo *= matcap;
+			#else
+				half3 mainMatCap = 1;
+				half3 layer0MatCap = 1;
+				half3 layer1MatCap = 1;
+				half3 layer2MatCap = 1;
+				half3 layer3MatCap = 1;
+				#if _MAINMATCAP
+					#if _USEGLOBALMATCAP
+						mainMatCap = SAMPLE_TEXTURE2D(_GMainMatcap, shared_linear_clamp_sampler, matcapUV).rgb;
+					#else
+						mainMatCap = SAMPLE_TEXTURE2D(_MainMatcap, shared_linear_clamp_sampler, matcapUV).rgb;
+					#endif
+				#endif
+				#if _LAYER0MATCAP
+					#if _USEGLOBALMATCAP
+						layer0MatCap = SAMPLE_TEXTURE2D(_GLayer0Matcap, shared_linear_clamp_sampler, matcapUV).rgb;
+					#else
+						layer0MatCap = SAMPLE_TEXTURE2D(_Layer0Matcap, shared_linear_clamp_sampler, matcapUV).rgb;
+					#endif
+				#endif
+				#if _LAYER1MATCAP
+					#if _USEGLOBALMATCAP
+						layer1MatCap = SAMPLE_TEXTURE2D(_GLayer1Matcap, shared_linear_clamp_sampler, matcapUV).rgb;
+					#else
+						layer1MatCap = SAMPLE_TEXTURE2D(_Layer1Matcap, shared_linear_clamp_sampler, matcapUV).rgb;
+					#endif
+				#endif
+				#if _LAYER2MATCAP
+					#if _USEGLOBALMATCAP
+						layer2MatCap = SAMPLE_TEXTURE2D(_GLayer2Matcap, shared_linear_clamp_sampler, matcapUV).rgb;
+					#else
+						layer2MatCap = SAMPLE_TEXTURE2D(_Layer2Matcap, shared_linear_clamp_sampler, matcapUV).rgb;
+					#endif
+				#endif
+				#if _LAYER3MATCAP
+					#if _USEGLOBALMATCAP
+						layer3MatCap = SAMPLE_TEXTURE2D(_GLayer3Matcap, shared_linear_clamp_sampler, matcapUV).rgb;
+					#else
+						layer3MatCap = SAMPLE_TEXTURE2D(_Layer3Matcap, shared_linear_clamp_sampler, matcapUV).rgb;
+					#endif
+				#endif
+
+				half3 matCap = mainMatCap;
+				matCap = lerp(matCap, layer0MatCap, d.blackboard.matCapMask.r);
+				matCap = lerp(matCap, layer1MatCap, d.blackboard.matCapMask.g);
+				matCap = lerp(matCap, layer2MatCap, d.blackboard.matCapMask.b);
+				matCap = lerp(matCap, layer3MatCap, d.blackboard.matCapMask.a);
+
+				#if _UNLIT
+					o.Albedo *= matCap;
+				#else
+					// on a lit shader, add matcap*albedo to emission,
+					// but only where the matcap has weight, and zero
+					// out other lighting elements there
+					float mweights = 0;
+					#if _MAINMATCAP
+						mweights = 1;
+					#endif
+					#if _LAYER0MATCAP
+						mweights = max(mweights, d.blackboard.matCapMask.r);
+					#elif _USELAYER
+						mweights = min(mweights, 1 - d.blackboard.matCapMask.r);
+					#endif
+
+					#if _LAYER1MATCAP
+						mweights = max(mweights, d.blackboard.matCapMask.g);
+					#elif _USELAYER_DEF1
+						mweights = min(mweights, 1 - d.blackboard.matCapMask.g);
+					#endif
+
+					#if _LAYER2MATCAP
+						mweights = max(mweights, d.blackboard.matCapMask.b);
+					#elif _USELAYER_DEF2
+						mweights = min(mweights, 1 - d.blackboard.matCapMask.b);
+					#endif
+
+					#if _LAYER3MATCAP
+						mweights = max(mweights, d.blackboard.matCapMask.a);
+					#elif _USELAYER_DEF3
+						mweights = min(mweights, 1 - d.blackboard.matCapMask.a);
+					#endif
+
+					mweights = saturate(mweights);
+
+				    half omw = 1.0 - mweights;
+					o.Emission += o.Albedo * matCap * mweights;
+					o.Albedo *= omw;
+					o.Smoothness *= omw;
+					o.Metallic *= omw;
+					o.Specular *= omw;
+					o.CoatMask = omw;
+                    o.CoatSmoothness *= omw;
+					o.Normal = lerp(half3(0,0,1), o.Normal, omw);
+					o.Occlusion *= omw;
+					
+				#endif
+
+			#endif
+		#endif
+	}
+
+END_CODE
+

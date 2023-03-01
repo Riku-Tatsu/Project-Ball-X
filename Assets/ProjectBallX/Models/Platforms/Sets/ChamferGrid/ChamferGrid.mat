@@ -85,11 +85,11 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _Color: {r: 0.1, g: 0.1, b: 0.1, a: 1}
-    - _ColorGreen: {r: 1, g: 0.674681, b: 0, a: 1}
-    - _ColorRed: {r: 0.40392157, g: 0.14107496, b: 0, a: 1}
+    - _ColorGreen: {r: 1, g: 0.8460728, b: 0.41037738, a: 1}
+    - _ColorRed: {r: 0, g: 0, b: 0, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
-    - _Specular: {r: 0.6886792, g: 0.6886792, b: 0.6886792, a: 0.88235295}
+    - _Specular: {r: 0.509434, g: 0.509434, b: 0.509434, a: 0.88235295}
     - _SpecularGreen: {r: 0.1, g: 0.1, b: 0.1, a: 0.5}
-    - _SpecularRed: {r: 0.09433961, g: 0.09433961, b: 0.09433961, a: 0.5}
+    - _SpecularRed: {r: 0.09433961, g: 0.09433961, b: 0.09433961, a: 0.3254902}
   m_BuildTextureStacks: []

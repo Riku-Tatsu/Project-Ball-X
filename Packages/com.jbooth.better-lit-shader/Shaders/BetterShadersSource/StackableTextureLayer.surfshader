@@ -1,0 +1,890 @@
+﻿///////////////////////////////
+// Better Lit Shader
+// © Jason Booth, 2021
+///////////////////////////////
+
+// Stackable Texture Layer
+
+BEGIN_OPTIONS
+   ShaderName "Hidden/Better Lit/Dev/StackableTextureLayer"
+   CustomEditor "JBooth.BetterShaders.BetterShaderMaterialGUI"
+   SubEditor "StackableTextureLayerMaterialEditor"
+   ExtraV2F0Require "_LAYERTRIPLANARBARYBLEND"
+   ScreenPosRequire "_LAYERSPARKLES"
+END_OPTIONS
+
+
+BEGIN_SUBSHADERS
+   "FunctionLibrary.surfshader"
+END_SUBSHADERS
+
+
+BEGIN_PROPERTIES
+    _LayerUVSource("Detail UV Source", Float) = 0
+    [Enum(Multiply2X, 0, AlphaBlend, 1, HeightBlend, 2)]_LayerBlendMode("Layer Blend Mode", Float) = 0
+    _LayerStrength("Layer Strength", Range(0,2)) = 1
+    _LayerAlbedoStrength("Detail Albedo Strength", Range(0, 2)) = 1
+    _LayerNormalStrength("Detail Normal Strength", Range(0, 2)) = 1
+    _LayerSmoothnessRemap("Smoothness Remap", Vector) = (0, 1, 0, 0)
+    _LayerAORemap("Occlusion Remap", Vector) = (0, 1, 0, 0)
+    _LayerMetallicRemap("Metallic Remap", Vector) = (0, 1, 0, 0)
+    _LayerSmoothness("Smoothness", Range(0,1)) = 0
+    _LayerSmoothnessStrength("Smoothness Strength", Range(0,1)) = 1
+    _LayerHeightRemap("Height Remap", Vector) = (0, 1, 0, 0)
+    _LayerHeightContrast("Height Contrast", Range(0.01, 0.99)) = 0.5
+    _LayerMetallic("Metallic", Range(0,1)) = 0
+    _LayerScale("Detail UV Scale", Float) = 3
+    _LayerTriplanarSpace ("Triplanar Space", Float) = 0
+    _LayerTriplanarContrast ("Triplanar Contrast", Range(1, 10)) = 4
+    _LayerTriplanarBaryBlend("Triplanar Bary Blend", Range(0, 1)) = 0.9
+    _LayerAlbedoMap("Albedo/Height", 2D) = "white" {}
+    _LayerAlbedoMap_P1("Albedo/Height", 2D) = "white" {}
+    _LayerAlbedoMap_P2("Albedo/Height", 2D) = "white" {}
+    _LayerNormalMap("Normal", 2D) = "bump" {}
+    _LayerNormalMap_P1("Normal", 2D) = "bump" {}
+    _LayerNormalMap_P2("Normal", 2D) = "bump" {}
+    _LayerMaskMap("Mask Map", 2D) = "black" {}
+    _LayerMaskMap_P1("Mask Map", 2D) = "black" {}
+    _LayerMaskMap_P2("Mask Map", 2D) = "black" {}
+    _LayerSpecularMap("Specular Map", 2D) = "black" {}
+    _LayerSpecularMap_P1("Specular Map", 2D) = "black" {}
+    _LayerSpecularMap_P2("Specular Map", 2D) = "black" {}
+    _LayerSpecularTint("Specular Tint", Color) = (1,1,1,1)
+    _LayerNoiseTex("Noise Texture", 2D) = "black" {}
+    _LayerNoiseFrequency("Noise Frequency", Float) = 1
+    _LayerNoiseAmplitude("Noise Amplitude", Range(0,10)) = 0.5
+    _LayerNoiseOffset("Noise Offset", Float) = 0
+    _LayerNoiseCenter("Noise Center", Range(-5, 5)) = 0
+    _LayerStochasticContrast("Stochastic Contrast", Range(0.01,0.999)) = 0.7
+    _LayerStochasticScale("Stochastic Scale", Range(0.2,1.5)) = 0.5
+    _LayerBlendTint("Layer Blend Tint", Color) = (1,1,1,1)
+    _LayerBlendContrast("Layer Blend Contrast", Range(0.5, 8)) = 2
+    _LayerTint("Layer Tint", Color) = (1,1,1,1)
+    _LayerAlbedoBrightness("Layer Brightness", Range(-1, 1)) = 0
+    _LayerAlbedoContrast("Layer Contrast", Range(0, 2)) = 1
+    _LayerAlbedoHue("Layer Hue", Range(-1, 1)) = 0
+    _LayerAlbedoSaturation("Layer Saturation", Range(0, 2)) = 1
+    _LayerEmissionMap("Layer Emission Map", 2D) = "white" {}
+    _LayerEmissionMap_P1("Layer Emission Map", 2D) = "white" {}
+    _LayerEmissionMap_P2("Layer Emission Map", 2D) = "white" {}
+    _LayerEmissionColor("Layer Emission Color", Color) = (0,0,0,0)
+    _LayerEmissionMultiplier("Layer Emission Multiplier", Float) = 1
+    _LayerAngleMin("Angle Minimum", Range(0,1)) = 0.1
+    _LayerAngleVector("Angle Vector", Vector) = (0,1,0,0)
+    _LayerVertexNormalBlend("Vertex->Normal Filter", Range(0,1)) = 0.8
+    _LayerHeight("Height Filter", Range(0,1)) = 0
+    [Enum(Top,0,Bottom,1)] _LayerInvertHeight ("Layer on", Float) = 0
+    _LayerFalloff("Angle Falloff Contrast", Range(2, 40)) = 8
+    _LayerTessStrength("Displacement Strength", Range(0,1)) = 1
+    _LayerWeightOverDistance("Weight Over Distance", Vector) = (1,1,1,1) // start distance/weight, end fade range/weight
+    _LayerMicroShadowStrength("Micro Shadow Strength", Range(0,2)) = 0
+    _LayerFuzzyShadingColor("Fuzzy Shading Color", Color) = (1,1,1,1)
+    _LayerFuzzyShadingParams("Fuzzy Shading Params", Vector) = (0.3,1,1.5,1) // coreMult, edgeMult, power
+    [Toggle(_LAYEREFFECTOR)] _LayerUseEffector("Use Effector", Float) = 0
+    [MaterialToggle]_LayerEffectorInvert("Invert", Float) = 0
+
+    _LayerFresnelColor("Fresnel Color", Color) = (0,0,0,0)
+    _LayerFresnelBSP("Fresnel Bias Scale Power", Vector) = (0,9,3,0)
+    _LayerSparkleNoise("Sparkle Noise", 2D) = "black" {}
+    _LayerSparkleTCI("Sparkle Tiling/Cutoff/Intensity/Emission", Vector) = (1, 0.7, 1, 0)
+    _LayerTextureRotation("Rotation", Vector) = (0,0,0,0)
+
+    _LayerClearCoatMap("Clear Coat Map", 2D) = "white" {}
+    _LayerClearCoatMap_P1("Clear Coat Map", 2D) = "white" {}
+    _LayerClearCoatMap_P2("Clear Coat Map", 2D) = "white" {}
+    _LayerClearCoatMask("Clear Coat Mask", Range(0.0, 1.0)) = 0.0
+    _LayerClearCoatSmoothness("Clear Coat Smoothness", Range(0.0, 1.0)) = 1.0
+
+
+    _LayerCheapSSSTexture("SSS Map", 2D) = "white" {}
+    _LayerCheapSSSTexture_P1("SSS Map", 2D) = "white" {}
+    _LayerCheapSSSTexture_P2("SSS Map", 2D) = "white" {}
+    _LayerCheapSSSTint("SSS Tint", Color) = (1,1,1,1)
+    _LayerCheapSSSThickness("SSS Thickness", Float) = 0
+
+END_PROPERTIES
+
+BEGIN_DEFINES
+   #pragma shader_feature_local _ _USELAYER
+   #pragma shader_feature_local _ _LAYERTRIPLANAR _LAYERTRIPLANARPROJECTION
+   #pragma shader_feature_local_fragment _ _LAYERTRIPLANARBARYBLEND _LAYERTRIPLANARFLATBLEND
+   #pragma shader_feature_local _ _LAYERALBEDO
+   #pragma shader_feature_local_fragment _ _LAYERNORMAL
+   #pragma shader_feature_local _ _LAYERMASK
+   #pragma shader_feature_local_fragment _ _LAYEREMISSION
+   #pragma shader_feature_local _ _LAYERNOISE
+   #pragma shader_feature_local _ _LAYERSTOCHASTIC
+   #pragma shader_feature_local _ _LAYERANGLEFILTER
+   #pragma shader_feature_local _ _LAYERANGLE_LOCAL
+   #pragma shader_feature_local_fragment _ _LAYERHSVSHIFT
+   #pragma shader_feature_local_fragment _ _LAYERFUZZYSHADING
+   #pragma shader_feature_local_fragment _ _LAYERMICROSHADOW
+   #pragma shader_feature_local _ _LAYERBLENDMULT2X _LAYERBLENDALPHA _LAYERBLENDHEIGHT
+   #pragma shader_feature_local _ _LAYEREFFECTOR
+   #pragma shader_feature_local _ _LAYERNOISEWORLD _LAYERNOISELOCAL
+   #pragma shader_feature_local _ _LAYERNOISEHQ _LAYERNOISETEXTURE _LAYERNOISEWORLEY
+   #pragma shader_feature_local_fragment _ _LAYERFRESNEL _LAYERFRESNELNORMAL
+   #pragma shader_feature_local _ _LAYERSPARKLES
+   #pragma shader_feature_local _ _LAYERTEXTUREROTATION
+   #pragma shader_feature_local_fragment _ _LAYERCLEARCOATMAP
+   #pragma shader_feature_local_fragment _ _LAYERCHEAPSSSTEXTURE
+
+END_DEFINES
+
+BEGIN_CBUFFER
+   //#if _USELAYER
+       float4 _LayerAlbedoMap_ST;
+       //#if _LAYERTRIPLANARPROJECTION
+            float4 _LayerAlbedoMap_P1_ST;
+            float4 _LayerAlbedoMap_P2_ST;
+       //#endif
+
+       half3 _LayerTint;
+       half _LayerBlendMode;
+       float _LayerUVSource;
+       half _LayerAlbedoBrightness;
+       half _LayerAlbedoContrast;
+       half _LayerAlbedoHue;
+       half _LayerAlbedoSaturation;
+       half _LayerHeightContrast;
+       half _LayerStrength;
+       half _LayerAlbedoStrength;
+       half _LayerNormalStrength;
+       half _LayerSmoothnessStrength;
+       half _LayerSmoothness;
+       half _LayerMetallic;
+       half _LayerStochasticScale;
+       half2 _LayerSmoothnessRemap;
+       half2 _LayerAORemap;
+       half2 _LayerMetallicRemap;
+       half2 _LayerHeightRemap;
+       float4 _LayerWeightOverDistance;
+       half _LayerMicroShadowStrength;
+       //#if _LAYERNOISE
+           float _LayerNoiseFrequency;
+           float _LayerNoiseAmplitude;
+           float _LayerNoiseOffset;
+           float _LayerNoiseCenter;
+           half3 _LayerBlendTint;
+       //#endif
+       //#if _LAYERANGLEFILTER
+           half _LayerFalloff;
+           half _LayerAngleMin;
+           half4 _LayerAngleVector;
+           half _LayerHeight;
+           half _LayerInvertHeight;
+           half _LayerVertexNormalBlend;
+       //#endif
+       half _LayerTriplanarSpace;
+       half _LayerTriplanarContrast;
+       half _LayerBlendContrast;
+       half3 _LayerEmissionColor;
+       half _LayerEmissionMultiplier;
+       half _LayerStochasticContrast;
+       half _LayerTessStrength;
+       //#if _LAYERFUZZYSHADING
+          half3 _LayerFuzzyShadingColor;
+          half3 _LayerFuzzyShadingParams;
+       //#endif
+
+       //#if _LAYEREFFECTOR
+          int _LayerEffectorInvert;
+       //#endif
+   //#endif
+    half3 _LayerSpecularTint;
+    half4 _LayerFresnelColor;
+    half3 _LayerFresnelBSP;
+    half4 _LayerSparkleTCI;
+    half3 _LayerTextureRotation;
+    half _LayerClearCoatMask;
+    half _LayerClearCoatSmoothness;
+
+    half3 _LayerCheapSSSTint;
+    half _LayerCheapSSSThickness;
+
+END_CBUFFER
+
+
+BEGIN_CODE
+
+   TEXTURE2D(_LayerAlbedoMap);
+   SAMPLER(sampler_LayerAlbedoMap);
+   TEXTURE2D(_LayerNormalMap);
+   SAMPLER(sampler_LayerNormalMap);
+   TEXTURE2D(_LayerMaskMap);
+   TEXTURE2D(_LayerEmissionMap);
+   TEXTURE2D(_LayerNoiseTex);
+   TEXTURE2D(_LayerSparkleNoise);
+   TEXTURE2D(_LayerClearCoatMap);
+   TEXTURE2D(_LayerCheapSSSTexture);
+
+   TEXTURE2D(_LayerAlbedoMap_P1);
+   TEXTURE2D(_LayerNormalMap_P1);
+   TEXTURE2D(_LayerMaskMap_P1);
+   TEXTURE2D(_LayerEmissionMap_P1);
+   TEXTURE2D(_LayerAlbedoMap_P2);
+   TEXTURE2D(_LayerNormalMap_P2);
+   TEXTURE2D(_LayerMaskMap_P2);
+   TEXTURE2D(_LayerEmissionMap_P2);
+   TEXTURE2D(_LayerClearCoatMap_P1);
+   TEXTURE2D(_LayerClearCoatMap_P2);
+   TEXTURE2D(_LayerCheapSSSTexture_P1);
+   TEXTURE2D(_LayerCheapSSSTexture_P2);
+
+   #if _SPECULAR
+   TEXTURE2D(_LayerSpecularMap);
+   TEXTURE2D(_LayerSpecularMap_P1);
+   TEXTURE2D(_LayerSpecularMap_P2);
+   #endif
+
+   void ModifyVertex(inout VertexData v, inout ExtraV2F d)
+   {
+      #if _LAYERTRIPLANARBARYBLEND
+         d.extraV2F0.xyz = DecodePackedToFloat4(v.texcoord0.w).xyz;
+      #endif
+   }
+
+   void ModifyTessellatedVertex(inout VertexData v, inout ExtraV2F e)
+   {
+      // set up out sampling function via defining macro's to the actual functions,
+      // based on this layers keywords.
+      #undef SAMPLEBARY
+      #undef TEXARGS
+      #if _LAYERSTOCHASTIC && _LAYERTRIPLANAR
+        #define SAMPLEBARY SampleTexBaryLODStochasticTriplanar
+        #define TEXARGS TEXTURE2D_ARGS
+      #elif _LAYERSTOCHASTIC && _LAYERTRIPLANARPROJECTION
+        #define SAMPLEBARY SampleTexBaryLODStochasticTriplanarProjection
+        #define TEXARGS TEXTURE2D_ARGS3
+      #elif _LAYERSTOCHASTIC
+        #define SAMPLEBARY SampleTexBaryLODStochastic
+        #define TEXARGS TEXTURE2D_ARGS
+      #elif _LAYERTRIPLANAR
+        #define SAMPLEBARY SampleTexBaryLODTriplanar
+        #define TEXARGS TEXTURE2D_ARGS
+      #elif _LAYERTRIPLANARPROJECTION
+        #define SAMPLEBARY SampleTexBaryLODTriplanarProjection
+        #define TEXARGS TEXTURE2D_ARGS3
+      #else
+        #define SAMPLEBARY SampleTexBaryLOD
+        #define TEXARGS TEXTURE2D_ARGS
+      #endif
+
+
+      #undef NOISEFUNC
+      #if _LAYERNOISEWORLD
+         #if _LAYERNOISEHQ
+            #define NOISEFUNC(a,b,c) DoNoiseWorldHQ(a,b,c)
+         #elif _LAYERNOISETEXTURE
+            #define NOISEFUNC(a,b,c) DoNoiseWorldTextureLOD(_LayerNoiseTex,a,b,c)
+         #elif _LAYERNOISEWORLEY
+            #define NOISEFUNC(a,b,c) DoNoiseWorldWorley(a,b,c)
+         #else
+            #define NOISEFUNC(a,b,c) DoNoiseWorldLQ(a,b,c)
+         #endif
+      #elif _LAYERNOISELOCAL
+         #if _LAYERNOISEHQ
+            #define NOISEFUNC(a,b,c) DoNoiseLocalHQ(a,b,c)
+         #elif _LAYERNOISETEXTURE
+            #define NOISEFUNC(a,b,c) DoNoiseLocalTextureLOD(_LayerNoiseTex, a,b,c)
+         #elif _LAYERNOISEWORLEY
+            #define NOISEFUNC(a,b,c) DoNoiseLocalWorley(a,b,c)
+         #else
+            #define NOISEFUNC(a,b,c) DoNoiseLocalLQ(a,b,c)
+         #endif
+       #else
+         #if _LAYERNOISEHQ
+            #define NOISEFUNC(a,b,c) DoNoiseUVHQ(a,b,c)
+         #elif _LAYERNOISETEXTURE
+            #define NOISEFUNC(a,b,c) DoNoiseUVTextureLOD(_LayerNoiseTex, a,b,c)
+         #elif _LAYERNOISEWORLEY
+            #define NOISEFUNC(a,b,c) DoNoiseUVWorley(a,b,c)
+         #else
+            #define NOISEFUNC(a,b,c) DoNoiseUVLQ(a,b,c)
+         #endif
+       #endif
+     
+
+      #if defined(_USELAYER) && defined(_LAYERALBEDO) && _TESSELLATION_ON && _HAS_LIT_TESSELLATION
+         ShaderData d;
+         ZERO_INITIALIZE(ShaderData, d);
+         d.texcoord0 = v.texcoord0;
+         d.localSpacePosition = v.vertex.xyz;
+         d.localSpaceNormal = v.normal;
+         d.worldSpacePosition = ObjectToWorldSpacePosition(v.vertex.xyz);
+         d.worldSpaceNormal = TransformObjectToWorld(v.normal);
+
+         float4 scale0 = _LayerAlbedoMap_ST;
+         float4 scale1 = scale0;
+         float4 scale2 = scale0;
+         #if _TRIPLANARPROJECTION
+             scale1 = _LayerAlbedoMap_P1_ST;
+             scale2 = _LayerAlbedoMap_P2_ST;
+         #endif
+
+         Config c = CreateConfig(d, scale0, scale1, scale2, _LayerTriplanarSpace, _LayerUVSource, _LayerTriplanarContrast);
+
+         #if _LAYERTEXTUREROTATION
+            RotateConfig(c, _LayerTextureRotation);
+         #endif
+
+         half detailMask = 1;
+         #if _LAYERNOISE
+            detailMask = NOISEFUNC(d, _LayerNoiseFrequency,  _LayerNoiseOffset) * _LayerNoiseAmplitude + _LayerNoiseCenter;
+            detailMask = saturate(detailMask);
+         #endif
+
+         #if _LAYERANGLEFILTER
+
+            #if _LAYERANGLE_LOCAL
+                half dt = dot(v.vertex.xyz, _LayerAngleVector.xyz);
+            #else
+                half dt = dot(d.worldSpaceNormal, _LayerAngleVector.xyz);
+            #endif
+            
+	        if (_LayerAngleVector.w > 0) dt = abs(dt);
+            dt -= _LayerAngleMin;
+            dt = saturate(dt * _LayerFalloff);
+
+            float hf = saturate((e.blackboard.vertexHeightOffset - _LayerHeight) * _LayerFalloff);
+            if (_LayerInvertHeight > 0.5)
+	            hf = 1.0 - hf;
+            dt *= hf;
+            detailMask *= dt;
+         #endif
+
+         if (_LayerWeightOverDistance.y + _LayerWeightOverDistance.w < 2)
+         {
+            float camDist = distance(d.worldSpacePosition, _WorldSpaceCameraPos);
+            detailMask *= lerp(_LayerWeightOverDistance.y, _LayerWeightOverDistance.w, saturate((camDist-_LayerWeightOverDistance.x) / _LayerWeightOverDistance.z));
+         }  
+
+         // this is a little trick to select the channel based on the stack index. The
+         // Better Shaders parser will replace the stackidx with the actual stack number in the shader.
+
+         #if _LAYERVERTEXMASK
+            #define STACKINDEX 0%STACKIDX%
+            if (STACKINDEX > 2)
+            {
+               detailMask *= v.vertexColor.a;
+            }
+            else if (STACKINDEX > 1)
+            {
+               detailMask *= v.vertexColor.b;
+            }
+            else if (STACKINDEX > 0)
+            {
+               detailMask *= v.vertexColor.g;
+            }
+            else
+            {
+               detailMask *= v.vertexColor.r;
+            }
+            #undef STACKINDEX
+         #elif _LAYERTEXTUREMASK && _HAS_WEIGHTTEXTURE_MASK
+            #define STACKINDEX 0%STACKIDX%
+            if (STACKINDEX > 2)
+            {
+               detailMask *= e.blackboard.weightTextureMask.a;
+            }
+            if (STACKINDEX > 1)
+            {
+               detailMask *= e.blackboard.weightTextureMask.b;
+            }
+            else if (STACKINDEX > 0)
+            {
+               detailMask *= e.blackboard.weightTextureMask.g;
+            }
+            else
+            {
+               detailMask *= e.blackboard.weightTextureMask.r;
+            }
+            #undef STACKINDEX
+         #endif
+
+         detailMask *= _LayerStrength;
+         detailMask *= _LayerTessStrength;
+
+         #if _LAYEREFFECTOR
+            if (_LayerEffectorInvert < 0.5)
+                detailMask *= e.blackboard.effectorWeight;
+            else
+                detailMask *= 1.0 - e.blackboard.effectorWeight;
+         #endif
+
+         // Setup for stochastic, if needed
+         #if _LAYERSTOCHASTIC && !_LAYERTRIPLANAR && !_LAYERTRIPLANARPROJECTION
+             PrepareStochasticUVs(_LayerStochasticScale, c.uv, c.uvT);
+         #elif _LAYERSTOCHASTIC && (_LAYERTRIPLANAR || _LAYERTRIPLANARPROJECTION)
+             PrepareStochasticUVs(_LayerStochasticScale, c.uvT.uv0, c.uvX);
+             PrepareStochasticUVs(_LayerStochasticScale, c.uvT.uv1, c.uvY);
+             PrepareStochasticUVs(_LayerStochasticScale, c.uvT.uv2, c.uvZ);
+         #endif
+
+         half height = e.blackboard.vertexHeightOffset;
+         half albedo = SAMPLEBARY(TEXARGS(_LayerAlbedoMap, sampler_AlbedoMap), c, _TessellationMipBias,_LayerStochasticContrast).a;
+         albedo = lerp(_LayerHeightRemap.x, _LayerHeightRemap.y, albedo);
+
+         #if _LAYERBLENDHEIGHT
+            half heightBlend = HeightBlend(height, albedo, detailMask, _LayerHeightContrast);
+            height = lerp(height, albedo, heightBlend);
+         #elif _LAYERBLENDALPHA
+            height = lerp(height, albedo,  detailMask);
+         #else
+            height = lerp(height, height * 2 * albedo,  detailMask);
+         #endif
+
+         // save some for later augustus.
+         e.blackboard.vertexHeightOffset = height;
+
+         height -= _TessellationOffset; 
+         // dampen cracks
+         height *= 1 - v.texcoord0.z;
+         height *= _TessellationDisplacement;
+         
+         v.vertex.xyz = e.blackboard.originalVertexPosition + v.normal * height;
+      #endif
+   }
+
+
+	void SurfaceFunction(inout Surface o, inout ShaderData d)
+	{
+#if defined(_USELAYER)
+      // set up sampling macros based on keywords set
+      #undef SAMPLEBARY
+      #undef SAMPLE
+      #undef SAMPLENORMAL
+      #undef TEXARGS
+      #if _LAYERSTOCHASTIC && _LAYERTRIPLANAR
+        #define SAMPLEBARY SampleTexBaryStochasticTriplanar
+        #define SAMPLE     SampleTexStochasticTriplanar
+        #define SAMPLENORMAL SampleNormalStochasticTriplanar
+        #define TEXARGS TEXTURE2D_ARGS
+      #elif _LAYERSTOCHASTIC && _LAYERTRIPLANARPROJECTION
+        #define SAMPLEBARY SampleTexBaryStochasticTriplanarProjection
+        #define SAMPLE     SampleTexStochasticTriplanarProjection
+        #define SAMPLENORMAL SampleNormalStochasticTriplanarProjection
+        #define TEXARGS TEXTURE2D_ARGS3
+      #elif _LAYERSTOCHASTIC
+        #define SAMPLEBARY SampleTexBaryStochastic
+        #define SAMPLE     SampleTexStochastic
+        #define SAMPLENORMAL SampleNormalStochastic
+        #define TEXARGS TEXTURE2D_ARGS
+      #elif _LAYERTRIPLANAR
+        #define SAMPLEBARY SampleTexBaryTriplanar
+        #define SAMPLE     SampleTexTriplanar
+        #define SAMPLENORMAL SampleNormalTriplanar
+        #define TEXARGS TEXTURE2D_ARGS
+      #elif _LAYERTRIPLANARPROJECTION
+        #define SAMPLEBARY SampleTexBaryTriplanarProjection
+        #define SAMPLE     SampleTexTriplanarProjection
+        #define SAMPLENORMAL SampleNormalTriplanarProjection
+        #define TEXARGS TEXTURE2D_ARGS3
+      #else
+        #define SAMPLEBARY SampleTexBary
+        #define SAMPLE     SampleTex
+        #define SAMPLENORMAL SampleNormal
+        #define TEXARGS TEXTURE2D_ARGS
+      #endif
+
+
+      #undef NOISEFUNC
+      #if _LAYERNOISEWORLD
+         #if _LAYERNOISEHQ
+            #define NOISEFUNC(a,b,c) DoNoiseWorldHQ(a,b,c)
+         #elif _LAYERNOISETEXTURE
+            #define NOISEFUNC(a,b,c) DoNoiseWorldTexture(_LayerNoiseTex, a,b,c)
+         #elif _LAYERNOISEWORLEY
+            #define NOISEFUNC(a,b,c) DoNoiseWorldWorley(a,b,c)
+         #else
+            #define NOISEFUNC(a,b,c) DoNoiseWorldLQ(a,b,c)
+         #endif
+      #elif _LAYERNOISELOCAL
+         #if _LAYERNOISEHQ
+            #define NOISEFUNC(a,b,c) DoNoiseLocalHQ(a,b,c)
+         #elif _LAYERNOISETEXTURE
+            #define NOISEFUNC(a,b,c) DoNoiseLocalTexture(_LayerNoiseTex,a, b,c)
+         #elif _LAYERNOISEWORLEY
+            #define NOISEFUNC(a,b,c) DoNoiseLocalWorley(a,b,c)
+         #else
+            #define NOISEFUNC(a,b,c) DoNoiseLocalLQ(a,b,c)
+         #endif
+       #else
+         #if _LAYERNOISEHQ
+            #define NOISEFUNC(a,b,c) DoNoiseUVHQ(a,b,c)
+         #elif _LAYERNOISETEXTURE
+            #define NOISEFUNC(a,b,c) DoNoiseUVTexture(_LayerNoiseTex, a,b,c)
+         #elif _LAYERNOISEWORLEY
+            #define NOISEFUNC(a,b,c) DoNoiseUVWorley(a,b,c)
+         #else
+            #define NOISEFUNC(a,b,c) DoNoiseUVLQ(a,b,c)
+         #endif
+       #endif
+
+
+		
+            float mask = 1;
+            float4 scale0 = _LayerAlbedoMap_ST;
+            float4 scale1 = scale0;
+            float4 scale2 = scale0;
+            #if _LAYERTRIPLANARPROJECTION
+               scale1 = _LayerAlbedoMap_P1_ST;
+               scale2 = _LayerAlbedoMap_P2_ST;
+            #endif
+
+            #if _LAYERTRIPLANARBARYBLEND
+                Config c = CreateConfig(d, scale0, scale1, scale2, _LayerTriplanarSpace, _LayerUVSource, _LayerTriplanarContrast, d.extraV2F0.xyz, _LayerTriplanarBaryBlend * 20);
+            #elif _LAYERTRIPLANARFLATBLEND
+                Config c = CreateConfig(d, scale0, scale1, scale2, _LayerTriplanarSpace, _LayerUVSource, _LayerTriplanarContrast, half3(0.5, 0.5, 0.5), _LayerTriplanarBaryBlend);
+            #else
+                Config c = CreateConfig(d, scale0, scale1, scale2, _LayerTriplanarSpace, _LayerUVSource, _LayerTriplanarContrast);
+            #endif
+
+            #if _LAYERTEXTUREROTATION
+                RotateConfig(c, _LayerTextureRotation);
+             #endif
+
+            // noise up the mask
+            #if _LAYERNOISE
+               mask = NOISEFUNC(d, _LayerNoiseFrequency, _LayerNoiseOffset) * _LayerNoiseAmplitude + _LayerNoiseCenter;
+               mask = saturate(mask);
+            #endif
+
+            #if _LAYERANGLEFILTER
+                #if _LAYERANGLE_LOCAL
+                    half3 cnorm = lerp(d.localSpaceNormal, o.Normal.xzy, _LayerVertexNormalBlend);
+                #else
+                    half3 cnorm = lerp(d.worldSpaceNormal, GetWorldSpaceNormal(d, o.Normal, o.Alpha), _LayerVertexNormalBlend);
+                #endif
+                half dt = dot(cnorm, _LayerAngleVector.xyz);
+	            if (_LayerAngleVector.w > 0) dt = abs(dt);
+                dt -= _LayerAngleMin;
+                dt = saturate(dt * _LayerFalloff);
+
+                float hf = saturate((o.Height - _LayerHeight) * _LayerFalloff);
+                if (_LayerInvertHeight > 0.5)
+	                hf = 1.0 - hf;
+                dt *= hf;
+                mask *= dt;
+            #endif
+
+            if (_LayerWeightOverDistance.y + _LayerWeightOverDistance.w < 2)
+            {
+               float camDist = distance(d.worldSpacePosition, _WorldSpaceCameraPos);
+               mask *= lerp(_LayerWeightOverDistance.y, _LayerWeightOverDistance.w, saturate((camDist-_LayerWeightOverDistance.x) / _LayerWeightOverDistance.z));
+            }
+
+           #define STACKINDEX 0%STACKIDX%
+           #if _LAYERVERTEXMASK
+                
+                if (STACKINDEX > 2)
+                {
+                   mask *= d.vertexColor.a;
+                }
+                else if (STACKINDEX > 1)
+                {
+                   mask *= d.vertexColor.b;
+                }
+                else if (STACKINDEX > 0)
+                {
+                   mask *= d.vertexColor.g;
+                }
+                else
+                {
+                   mask *= d.vertexColor.r;
+                }
+            #elif _LAYERTEXTUREMASK && _HAS_WEIGHTTEXTURE_MASK
+
+                if (STACKINDEX > 2)
+                {
+                   mask *= d.blackboard.weightTextureMask.a;
+                }
+                else if (STACKINDEX > 1)
+                {
+                   mask *= d.blackboard.weightTextureMask.b;
+                }
+                else if (STACKINDEX > 0)
+                {
+                   mask *= d.blackboard.weightTextureMask.g;
+                }
+                else
+                {
+                   mask *= d.blackboard.weightTextureMask.r;
+                }
+             #endif
+            #undef STACKINDEX
+
+            mask *= _LayerStrength;
+
+            #if _LAYEREFFECTOR
+                if (_LayerEffectorInvert < 0.5)
+                    mask *= d.blackboard.effectorWeight;
+                else
+                    mask *= 1.0 - d.blackboard.effectorWeight;
+            #endif
+
+            #if _LAYERSTOCHASTIC && !_LAYERTRIPLANAR && !_LAYERTRIPLANARPROJECTION
+                PrepareStochasticUVs(_LayerStochasticScale, c.uv, c.uvT);
+                InitStochasticDxDy(c.uvT, c.origUV, c.origScale);
+            #elif _LAYERSTOCHASTIC && (_LAYERTRIPLANAR || _LAYERTRIPLANARPROJECTION)
+                PrepareStochasticUVs(_LayerStochasticScale, c.uvT.uv0, c.uvX);
+                PrepareStochasticUVs(_LayerStochasticScale, c.uvT.uv1, c.uvY);
+                PrepareStochasticUVs(_LayerStochasticScale, c.uvT.uv2, c.uvZ);
+                InitStochasticDxDy(c.uvX, c.origUV, c.origScale);
+                InitStochasticDxDy(c.uvY, c.origUV, c.origScale1);
+                InitStochasticDxDy(c.uvZ, c.origUV, c.origScale2);
+            #endif
+            
+            half alpha = 0.5;
+            half4 albedo = half4(_LayerTint, 0.5);
+            #if defined(_LAYERALBEDO)
+                albedo = SAMPLEBARY(TEXARGS(_LayerAlbedoMap, sampler_LayerAlbedoMap), c, _LayerStochasticContrast, d);
+                #if _PARALLAX
+                   float2 offset = DoParallaxOffset(albedo.a, _ParallaxHeight, d.tangentSpaceViewDir);
+                   OffsetUV(c, offset);
+                   albedo = SAMPLE(TEXARGS(_LayerAlbedoMap, sampler_LayerAlbedoMap), c);
+                #endif
+                albedo.rgb *= _LayerTint;
+                albedo.a = lerp(_LayerHeightRemap.x, _LayerHeightRemap.y, albedo.a);
+                alpha = albedo.a;
+                #if _LAYERBLENDALPHA || _LAYERBLENDMULT2X
+                    mask *= alpha;
+                #endif
+            #else
+                // Unity will strip the sampler if it's not used, so if we have any other texture to sample,
+                // we have to sample the albedo anyway, making sure it could contribute to the output,
+                // and also do it in such a way that it's fast. Wish we could just [NoStrip] the sampler or something.
+                float tempA = saturate(1 + SAMPLE_TEXTURE2D_LOD(_LayerAlbedoMap, sampler_LayerAlbedoMap, float2(0,0), 12).r);
+
+                o.Albedo *= tempA;
+                o.Normal *= tempA;
+            #endif // layer albedo
+
+            albedo.rgb = AdjustContrast(albedo.rgb, _LayerAlbedoContrast);
+            albedo.rgb += _LayerAlbedoBrightness;
+
+            #if _LAYERHSVSHIFT
+               albedo.rgb = RGBtoHSV(albedo.rgb);
+               albedo.r += _AlbedoHue;
+               albedo.g *= _AlbedoSaturation;
+               albedo.rgb = HSVtoRGB(albedo.rgb);
+            #endif
+
+            half smoothness = 0;
+            half ao = 1;
+            half metallic = 0;
+            half3 emission = 0;
+
+            half3 dnormal = half3(0,0,1);  // might not be correct for surfgrad, would be in worldspace?
+            #if defined(_LAYERNORMAL) && !defined(_AUTONORMAL)
+                dnormal = SAMPLENORMAL(TEXARGS(_LayerNormalMap, sampler_LayerNormalMap), c, d, _LayerNormalStrength * mask, smoothness, ao, metallic);
+            #endif
+
+            #if _LAYERFRESNEL || _LAYERFRESNELNORMAL
+                half3 wsn = d.worldSpaceNormal;
+                #if _LAYERFRESNELNORMAL
+                    wsn = GetWorldSpaceNormal(d, dnormal, albedo.a);
+                #endif
+                half fresnel = Fresnel(d, wsn, _LayerFresnelBSP.x, _LayerFresnelBSP.y, _LayerFresnelBSP.z);
+                albedo.rgb = lerp(albedo.rgb, _LayerFresnelColor.rgb, fresnel);
+             #endif
+
+             #if _LAYERSPARKLES
+                half sparkles = Sparkle(d, TEXTURE2D_ARGS(_LayerSparkleNoise, shared_point_repeat_sampler), d.screenUV, d.texcoord0.xy, _LayerSparkleTCI.x, _LayerSparkleTCI.y, _LayerSparkleTCI.z);
+                sparkles *= mask;
+                albedo.rgb = saturate(albedo + sparkles);
+                smoothness += sparkles;
+                emission += sparkles * _LayerSparkleTCI.w;
+             #endif
+            half heightBlend = mask;
+            #if defined(_LAYERALBEDO)
+                #if _LAYERFUZZYSHADING 
+                {
+                   albedo.rgb *= FuzzyShade(d, albedo.a, _LayerFuzzyShadingColor.rgb, dnormal,
+                                            _LayerFuzzyShadingParams.x, _LayerFuzzyShadingParams.y, _LayerFuzzyShadingParams.z);
+                }
+                #endif
+
+                #if _LAYERBLENDHEIGHT
+                   heightBlend = HeightBlend(o.Alpha, albedo.a, mask, _LayerHeightContrast);
+                #elif _LAYERBLENDALPHA
+                   heightBlend =  mask;
+                #endif
+
+                #if _LAYERBLENDALPHA || _LAYERBLENDHEIGHT
+                {
+                   o.Albedo = lerp(o.Albedo, albedo.rgb, heightBlend * _LayerAlbedoStrength);
+                   o.Alpha = lerp(o.Alpha, albedo.a, heightBlend);
+                   #if _LAYERNOISE
+                      float maskDif = (_LayerBlendContrast * 2) / 16.0;
+                      o.Albedo *= lerp(_LayerBlendTint, half3(1,1,1), saturate(abs(HeightBlend(o.Alpha, albedo.a, _LayerAlbedoStrength * mask, maskDif) - 0.5) * 2));
+                   #endif
+                }
+                #else
+                {
+                   o.Albedo = lerp(o.Albedo, o.Albedo * 2 * albedo.rgb,  mask * _LayerAlbedoStrength);
+                   #if _LAYERNOISE
+                      o.Albedo *= lerp(_LayerBlendTint, half3(1,1,1), saturate(abs(mask - 0.5) * _LayerBlendContrast));
+                   #endif
+                }
+                #endif
+            #endif
+            #if _USEMATCAP
+            #define STACKINDEX 0%STACKIDX%
+            if (STACKINDEX > 2)
+            {
+                d.blackboard.matCapMask.a = heightBlend;
+            }
+            else if (STACKINDEX > 1)
+            {
+                d.blackboard.matCapMask.b = heightBlend;
+            }
+            else if (STACKINDEX > 0)
+            {
+                d.blackboard.matCapMask.g = heightBlend;
+            }
+            else
+            {
+                d.blackboard.matCapMask.r = heightBlend;
+            }
+            #undef STACKINDEX 
+            #endif
+
+            
+
+            #if defined(_LAYERNORMAL) && !defined(_AUTONORMAL)
+                #if _LAYERALBEDO
+                   #if _LAYERBLENDALPHA || _LAYERBLENDHEIGHT
+                      o.Normal = lerp(o.Normal, dnormal, heightBlend);
+                   #else
+                      o.Normal = LitBlendDetailNormal(o.Normal, dnormal);
+                   #endif
+                #else
+                   o.Normal = LitBlendDetailNormal(o.Normal, dnormal);
+                #endif
+
+                #if _PACKEDFAST
+                    smoothness = lerp(_LayerSmoothnessRemap.x, _LayerSmoothnessRemap.y, smoothness); 
+					ao = lerp(_LayerAORemap.x, _LayerAORemap.y, ao);
+                    #if _LAYERMICROSHADOW
+                      ao *= MicroShadow(d, dnormal, alpha, ao, _LayerMicroShadowStrength);
+                    #endif
+
+                    o.Smoothness = lerp(o.Smoothness, smoothness, heightBlend);
+                    o.Occlusion = lerp(o.Occlusion, ao, heightBlend);
+                #elif _PACKEDFASTMETAL
+                    smoothness = lerp(_LayerSmoothnessRemap.x, _LayerSmoothnessRemap.y, smoothness);
+                    o.Smoothness = lerp(o.Smoothness, smoothness, heightBlend);
+                    metallic = lerp(_LayerMetallicRemap.x, _LayerMetallicRemap.y, metallic);
+                    o.Metallic = lerp(o.Metallic, metallic, heightBlend);
+                #endif
+            #endif
+
+            #if defined(_LAYERMASK) && !_PACKEDFAST && !_PACKEDFASTMETAL && !_PASSSCENESELECT && !_PASSMOTIONVECTOR
+                half4 dmask = SAMPLE(TEXARGS(_LayerMaskMap, sampler_LayerAlbedoMap), c);
+                dmask.w = lerp(_LayerSmoothnessRemap.x, _LayerSmoothnessRemap.y, dmask.a);
+                dmask.y = lerp(_LayerAORemap.x, _LayerAORemap.y, dmask.y);
+                dmask.x = lerp(_LayerMetallicRemap.x, _LayerMetallicRemap.y, dmask.x);
+
+                #if _LAYERMICROSHADOW
+                {
+                  ao *= MicroShadow(d, dnormal, alpha, dmask.y, _LayerMicroShadowStrength);
+                }
+                #endif
+
+                #if _LAYERALBEDO
+                   #if _LAYERBLENDALPHA || _LAYERBLENDHEIGHT
+                   {
+                       o.Smoothness = lerp(o.Smoothness, dmask.a, heightBlend);
+                       o.Occlusion = lerp(o.Occlusion, o.Occlusion * dmask.y, heightBlend);
+                       o.Metallic = lerp(o.Metallic, dmask.x, heightBlend);
+                   }
+                   #else
+                   {
+                       o.Smoothness = lerp(o.Smoothness, dmask.a, mask * _LayerSmoothnessStrength);
+                       o.Occlusion = lerp(o.Occlusion, o.Occlusion * dmask.y, mask * _LayerSmoothnessStrength);
+                       o.Metallic = lerp(o.Metallic, dmask.x, mask * _LayerSmoothnessStrength);
+                   }
+                   #endif
+                #endif
+            #elif !_PACKEDFAST && !_PACKEDFASTMETAL && !_PASSSCENESELECT && !_PASSMOTIONVECTOR
+                #if _LAYERALBEDO
+                   #if _LAYERBLENDALPHA || _LAYERBLENDHEIGHT
+                   {
+                       o.Smoothness = lerp(o.Smoothness, _LayerSmoothness, heightBlend);
+                       o.Occlusion = lerp(o.Occlusion, 1, heightBlend);
+                       o.Metallic = lerp(o.Metallic, _LayerMetallic, heightBlend);
+                   }
+                   #endif
+                #endif
+            #endif
+
+            #if _CLEARCOAT && !_PASSSCENESELECT && !_PASSMOTIONVECTOR
+               half2 coat = half2(_LayerClearCoatMask, _LayerClearCoatSmoothness);
+               #if _CLEARCOATMAP
+                    coat = SAMPLE(TEXARGS(_LayerClearCoatMap, sampler_LayerAlbedoMap), c).rg;
+               #endif
+               #if _LAYERALBEDO
+                    #if _LAYERBLENDALPHA || _LAYERBLENDHEIGHT
+                       o.CoatMask = lerp(o.CoatMask, coat.r, heightBlend);
+                       o.CoatSmoothness = lerp(o.CoatSmoothness, coat.g, heightBlend);
+                    #else
+                       o.CoatMask = lerp(o.CoatMask, coat.r,  mask * _LayerAlbedoStrength);
+                       o.CoatSmoothness = lerp(o.CoatSmoothness, coat.g,  mask * _LayerAlbedoStrength);
+                    #endif
+                #else
+                    o.CoatMask = lerp(o.CoatMask, coat.r,  mask * _LayerAlbedoStrength);
+                    o.CoatSmoothness = lerp(o.CoatSmoothness, coat.g,  mask * _LayerAlbedoStrength);
+                #endif
+         
+            #endif
+
+            #if _CHEAPSSS && !_PASSSCENESELECT && !_PASSMOTIONVECTOR
+                half4 sssData = half4(_LayerCheapSSSTint.rgb, _LayerCheapSSSThickness);
+                #if _LAYERCHEAPSSSTEXTURE
+                      sssData = SAMPLE(TEXARGS(_LayerCheapSSSTexture, sampler_LayerAlbedoMap), c);
+                #endif
+                #if _LAYERALBEDO
+                    #if _LAYERBLENDALPHA || _LAYERBLENDHEIGHT
+                       d.blackboard.cheapSSSTintThickness = lerp(d.blackboard.cheapSSSTintThickness, sssData, heightBlend);
+                    #else
+                       d.blackboard.cheapSSSTintThickness = lerp(d.blackboard.cheapSSSTintThickness, sssData, mask * _LayerAlbedoStrength);
+                    #endif
+                #else
+                    d.blackboard.cheapSSSTintThickness = lerp(d.blackboard.cheapSSSTintThickness, sssData, mask * _LayerAlbedoStrength);
+                #endif
+            #endif // _CHEAPSSS
+
+            #if _LAYEREMISSION && !_PASSSCENESELECT && !_PASSMOTIONVECTOR
+                emission += SAMPLE(TEXARGS(_LayerEmissionMap, sampler_LayerAlbedoMap), c).rgb * _LayerEmissionColor * _LayerEmissionMultiplier;
+                #if _LAYERALBEDO
+                    #if _LAYERBLENDALPHA || _LAYERBLENDHEIGHT
+                       o.Emission = lerp(o.Emission, emission.rgb, heightBlend);
+                    #else
+                       o.Emission = lerp(o.Emission, emission.rgb * 2,  mask * _LayerAlbedoStrength);
+                    #endif
+                #else
+                    o.Emission = lerp(o.Emission, emission.rgb * 2,  mask * _LayerAlbedoStrength);
+                #endif
+            #endif // _LAYEREMISSION
+
+            #if _SPECULAR && !_PASSSCENESELECT && !_PASSMOTIONVECTOR
+                half3 specular = SAMPLE(TEXARGS(_LayerSpecularMap, sampler_LayerAlbedoMap), c).rgb * _LayerSpecularTint.rgb;
+                #if _LAYERALBEDO
+                    #if _LAYERBLENDALPHA || _LAYERBLENDHEIGHT
+                       o.Specular = lerp(o.Specular, specular.rgb, heightBlend);
+                    #else
+                       o.Specular = lerp(o.Specular, specular.rgb * 2,  mask * _LayerAlbedoStrength);
+                    #endif
+                #else
+                    o.Specular = lerp(o.Specular, specular.rgb * 2,  mask * _LayerAlbedoStrength);
+                #endif
+            #endif // _LAYERSPECULAR
+
+            
+            
+       #endif // use layer
+	}
+
+END_CODE
+

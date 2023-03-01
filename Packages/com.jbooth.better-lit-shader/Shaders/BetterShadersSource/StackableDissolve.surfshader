@@ -1,0 +1,142 @@
+﻿///////////////////////////////
+// Better Lit Shader
+// © Jason Booth, 2021
+///////////////////////////////
+
+
+BEGIN_OPTIONS
+   ShaderName "Hidden/Better Lit/Dev/StackableDissolve"
+   CustomEditor "JBooth.BetterShaders.BetterShaderMaterialGUI"
+   SubEditor "StackableDissolveEditor"
+END_OPTIONS
+
+BEGIN_SUBSHADERS
+   "FunctionLibrary.surfshader"
+END_SUBSHADERS
+
+BEGIN_PROPERTIES
+    _DissolveAmount("Dissolve Amount", Range(0,1)) = 0
+	_DissolveTexture("Dissolve Texture", 2D) = "black" {}
+    _DissolveGradient("Dissolve Gradient", 2D) = "white" {}
+	_DissolveColoration("Dissolve Coloration", Range(0,1)) = 1
+	_DissolveEdgeContrast("Dissolve Edge Contrast", Range(2, 128)) = 10
+    _DissolveEmissiveStr("Dissolve Emissive Strength", Range(0,4)) = 0
+	_DissolveNoiseFrequency("Noise Frequency", Float) = 1
+    _DissolveNoiseAmplitude("Noise Amplitude", Range(0,10)) = 0.5
+    _DissolveNoiseOffset("Noise Offset", Float) = 0
+	_DissolveNoiseCenter("Noise Center", Range(-5, 5)) = 0
+	[Toggle(_DISSOLVE_EFFECTOR)] _DissolveEffector("Disolve Effector Active", Float) = 0
+	[MaterialToggle]_DissolveEffectorInvert("Effector Invert", Float) = 0
+
+END_PROPERTIES
+
+BEGIN_DEFINES
+	#pragma shader_feature_local_fragment _ _DISSOLVE
+	#pragma shader_feature_local_fragment _ _DISSOLVE_EFFECTOR
+	#pragma shader_feature_local_fragment _ _DISSOLVENOISEWORLD _DISSOLVENOISELOCAL
+	#pragma shader_feature_local_fragment _ _DISSOLVENOISEHQ _DISSOLVENOISEWORLEY _DISSOLVENOISELQ
+END_DEFINES
+
+BEGIN_CBUFFER
+	//#if _DISSOLVE
+		half _DissolveAmount;
+		half _DissolveEmissiveStr;
+		half _DissolveEdgeContrast;
+		half _DissolveColoration;
+		float _DissolveNoiseFrequency;
+		float _DissolveNoiseAmplitude;
+		float _DissolveNoiseOffset;
+		float _DissolveNoiseCenter;
+		float4 _DissolveTexture_ST;
+		int _DissolveEffectorInvert;
+	//#endif
+END_CBUFFER
+
+
+BEGIN_CODE
+
+	
+	TEXTURE2D(_DissolveTexture);
+	TEXTURE2D(_DissolveGradient);
+
+	void SurfaceFunction(inout Surface o, ShaderData d)
+	{
+	  #undef NOISEFUNC
+      #if _DISSOLVENOISEWORLD
+         #if _DISSOLVENOISEHQ
+            #define NOISEFUNC(a,b,c) DoNoiseWorldHQ(a,b,c)
+         #elif _DISSOLVENOISEWORLEY
+            #define NOISEFUNC(a,b,c) DoNoiseWorldWorley(a,b,c)
+         #else
+            #define NOISEFUNC(a,b,c) DoNoiseWorldLQ(a,b,c)
+         #endif
+      #elif _DISSOLVENOISELOCAL
+         #if _DISSOLVENOISEHQ
+            #define NOISEFUNC(a,b,c) DoNoiseLocalHQ(a,b,c)
+         #elif _DISSOLVENOISEWORLEY
+            #define NOISEFUNC(a,b,c) DoNoiseLocalWorley(a,b,c)
+         #else
+            #define NOISEFUNC(a,b,c) DoNoiseLocalLQ(a,b,c)
+         #endif
+       #else
+         #if _DISSOLVENOISEHQ
+            #define NOISEFUNC(a,b,c) DoNoiseUVHQ(a,b,c)
+         #elif _DISSOLVENOISEWORLEY
+            #define NOISEFUNC(a,b,c) DoNoiseUVWorley(a,b,c)
+         #else
+            #define NOISEFUNC(a,b,c) DoNoiseUVLQ(a,b,c)
+         #endif
+       #endif
+
+
+		#if _DISSOLVE
+		float2 uv = d.texcoord0.xy * _DissolveTexture_ST.xy + _DissolveTexture_ST.zw;
+		float2 dx = ddx(uv);
+		float2 dy = ddy(uv);
+		#if _DISSOLVENOISEWORLD 
+			float3 wdx = ddx(d.worldSpacePosition);
+			float3 wdy = ddy(d.worldSpacePosition);
+		#elif _DISSOLVENOISELOCAL
+			float3 ldx = ddx(d.localSpacePosition);
+			float3 ldy = ddy(d.localSpacePosition);
+		#endif
+
+		float disamount = _DissolveAmount;
+
+		#if _DISSOLVE_EFFECTOR && HASEFFECTOR
+			if (_DissolveEffectorInvert > 0.5)
+				disamount *= 1.0 - d.blackboard.effectorWeight;
+			else
+				disamount *= d.blackboard.effectorWeight;
+		#endif
+
+		UNITY_BRANCH
+		if (disamount > 0)
+		{
+			#if _DISSOLVENOISEHQ || _DISSOLVENOISEWORLEY || _DISSOLVENOISELQ
+				half dissolve = saturate(NOISEFUNC(d, _DissolveNoiseFrequency, _DissolveNoiseOffset) * _DissolveNoiseAmplitude + _DissolveNoiseCenter);
+			#else
+				#if _DISSOLVENOISEWORLD
+					half dissolve = FBM3DTextureGrad(_DissolveTexture, d.worldSpacePosition * _DissolveNoiseFrequency + _DissolveNoiseOffset, d.worldSpaceNormal, wdx, wdy);
+				#elif _DISSOLVENOISELOCAL
+					half dissolve = FBM3DTextureGrad(_DissolveTexture, d.localSpacePosition * _DissolveNoiseFrequency + _DissolveNoiseOffset, d.localSpaceNormal, ldx, ldy);
+				#else
+					COUNTSAMPLE
+					half dissolve = SAMPLE_TEXTURE2D(_DissolveTexture, shared_linear_repeat_sampler, uv).g;
+				#endif
+			#endif
+			
+			half cp =  saturate(disamount - (dissolve - disamount) * _DissolveEdgeContrast) + disamount;
+			half cp2 = saturate(1.0 - abs((dissolve - disamount) * _DissolveEdgeContrast));
+			clip(1.0 - cp);
+			float2 fuv = float2(cp2, 0.5);
+			half3 col = SAMPLE_TEXTURE2D_LOD(_DissolveGradient, shared_linear_clamp_sampler, fuv, 0).rgb;
+				
+			o.Albedo = lerp(o.Albedo, col, _DissolveColoration * cp2);
+			o.Emission = lerp(o.Emission, col * _DissolveEmissiveStr, _DissolveColoration * cp2);
+		}
+		#endif
+	}
+
+END_CODE
+

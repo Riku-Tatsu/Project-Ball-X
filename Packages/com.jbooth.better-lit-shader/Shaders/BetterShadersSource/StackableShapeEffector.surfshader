@@ -1,0 +1,83 @@
+﻿///////////////////////////////
+// Better Lit Shader
+// © Jason Booth, 2021
+///////////////////////////////
+
+BEGIN_OPTIONS
+   ShaderName "Hidden/Better Lit/Dev/StackableShapeEffector"  
+END_OPTIONS
+
+BEGIN_PROPERTIES
+	[Toggle(_EFFECTORENABLED)] _EnableEffectorSystem("Enable Effector", Float) = 0
+END_PROPERTIES
+
+BEGIN_DEFINES
+	#pragma shader_feature_local _ _EFFECTORENABLED
+	#define HASEFFECTOR 1
+END_DEFINES
+
+
+BEGIN_BLACKBOARD
+	half effectorWeight;
+END_BLACKBOARD
+
+
+BEGIN_CODE
+
+#if _EFFECTORENABLED
+
+	int	     _EffectorCount;
+	float4x4 _EffectorMtx[8];
+	float4   _EffectorData[8];
+
+	float ProcessEffector(float3 worldPos, int i)
+	{
+		float d = 0;
+		if (_EffectorData[i].x == 1)
+		{
+			float3 pos = mul(_EffectorMtx[i], float4(0,0,0, 1)).xyz;
+			d = (distance(pos, worldPos) / max(0.001, _EffectorMtx[i][0].x * 0.5));
+			d = 1.0 - saturate(d);
+			d *= _EffectorData[i].y;
+		}
+		else
+		{
+			float3 rot = mul((float3x3)_EffectorMtx[i], float3(0,0,1));
+			float3 localPos = TransformWorldToObject(worldPos);
+			localPos -= mul(_EffectorMtx[i], float4(0,0,0,1)).xyz;
+			d = dot(localPos, rot.xyz);
+			d = 1.0 - saturate(d * _EffectorData[i].y);
+		}
+		
+		return saturate(d);
+	}
+
+	float GetEffectorWeights(float3 worldPos)
+	{
+		float w = 0;
+		w = ProcessEffector(worldPos, 0);
+		for (int i = 1; i < _EffectorCount; ++i)
+		{
+			w = max(w, ProcessEffector(worldPos, i));
+		}
+
+		return w;
+	}
+#endif
+
+	void ModifyTessellatedVertex(inout VertexData v, inout ExtraV2F e)
+	{
+		#if _EFFECTORENABLED
+			e.blackboard.effectorWeight = GetEffectorWeights(ObjectToWorldSpacePosition(v.vertex.xyz));
+		#endif
+	}
+
+	void SurfaceFunction(inout Surface o, inout ShaderData d)
+	{
+		#if _EFFECTORENABLED
+			d.blackboard.effectorWeight = GetEffectorWeights(d.worldSpacePosition);
+		#endif
+	}
+
+END_CODE
+
