@@ -84,13 +84,13 @@ Material:
     - _Color: {r: 0.1981132, g: 0.12808095, b: 0.06074226, a: 1}
     - _ColorSecondary: {r: 0.1, g: 0.1, b: 0.1, a: 1}
     - _EmisInsideBase: {r: 0.99215686, g: 0.704514, b: 0, a: 1}
-    - _EmisInsideGlow: {r: 1.9607843, g: 0.9098039, b: 0, a: 1}
+    - _EmisInsideGlow: {r: 2.1163914, g: 0.9870519, b: 0.009983002, a: 1}
     - _EmisOutsideBase: {r: 0.1, g: 0.05, b: 0, a: 1}
-    - _EmisOutsideGlow: {r: 1.9607843, g: 0.9098039, b: 0, a: 1}
+    - _EmisOutsideGlow: {r: 2.0408063, g: 0.9509049, b: 0.009626467, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _GlowInsideBase: {r: 0.5, g: 0.25, b: 0, a: 1}
     - _GlowOutsideBase: {r: 0.1, g: 0.05, b: 0, a: 1}
     - _Specular: {r: 0.5, g: 0.5, b: 0.5, a: 0.7764706}
-    - _SpecularPrimary: {r: 0.24999997, g: 0.24999997, b: 0.24999997, a: 0}
-    - _SpecularSecondary: {r: 0.5, g: 0.5, b: 0.5, a: 0.75}
+    - _SpecularPrimary: {r: 0.24999994, g: 0.24999994, b: 0.24999994, a: 0}
+    - _SpecularSecondary: {r: 0.5, g: 0.5, b: 0.5, a: 0.6862745}
   m_BuildTextureStacks: []

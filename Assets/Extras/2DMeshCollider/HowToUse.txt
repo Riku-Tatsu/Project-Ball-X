@@ -1,0 +1,65 @@
+----------2D Mesh Collider----------
+
+Go to Window -> 2D Mesh Collider Helper to open the helper window
+
+
+---- 2D Mesh Collider Helper options:
+
+- Z-Depth: the position on the Z-axis of the game, this is the plane on which all 2D gameplay occurs. The 2D colliders created will match the 2D shape of the meshes at this depth.
+
+- Set for all: Sets the Z-Depth for all Mesh2DColliders in the scene, and updates them.
+
+- Extra Sample Offsets: Creates extra colliders at these offsets (relative to the z-depth), for each added sample offset. On terrains these colliders are combined into 1.
+Use the "+" button to add sample offsets, and the "-" button to remove them.
+
+- Set for all: Sets the Extra Sample Offsets for all Mesh2DColliders in the scene, and updates them.
+
+- Place in container: Whether or not the 2D colliders should be placed in a container-gameobject. Due to the nature of polygon-colliders and edge-colliders (the 2 types of 2D colliders used here), they can not be attached or parented to gameobjects with 3D rotations, as such these 2D colliders need to be independant objects. As such, placing these colliders in either a container or without a parent are the only possible options.
+
+- Only selected objects: Whether or not the Convert- and Create- buttons should apply to all objects in the scene, or only the objects currently selected.
+
+- Collider type: Choose what type of collider to create, Polygon colliders (default), or Edge colliders.
+Polygon colliders are ideal for normal closed meshes.
+Edge colliders should only be used for meshes that represent the ground or other open meshes.
+
+- Convert all MeshColliders: Creates a 2d Mesh Collider for all (optionally only selected) GameObjects with (3D) MeshColliders attached, and removes the original (3D) MeshColliders. Uses the mesh from the MeshCollider as source for the 2d collider.
+
+- Create for all MeshFilters: Creates a 2d Mesh Collider for all (optionally only selected) GameObjects with MeshFilters attached. Uses the mesh from the MeshFilter as source for the 2d collider.
+
+- Create for all Terrains: Creates a 2d Mesh Collider for all (optionally only selected) GameObjects with Terrains attached. Uses the TerrainData from the Terrain as source for the 2d collider. The 2D Colliders for terrains are always Edge Colliders.
+
+- Update all Mesh2DColliders: Updates all Mesh2DColliders in the scene.
+
+
+---- Mesh 2D Collider options:
+
+- Select Collider: Selects the actual 2D Collider for this object.
+
+- Update Shape: When off, the collider will no longer update the shape when updating the collider, only its position and z-depth. Should be kept on unless you want to make manual changes to the collider. (You can press "Edit Collider" on the actual 2D collider to change its shape manually)
+
+- Update Collider: updates the collider to match the object's mesh, position, rotation, scale and z-depth. (or only postion and z-depth if "Update Shape" is disabled)
+
+In Advanced:
+
+- Reference Mesh: The mesh used as basis for the 2D collider, generally this is the mesh from the meshfilter, but you could change this if so desired, for example to use a more simplified mesh. (only when it's a MeshFilter-gameobject) 
+
+- Reference Terrain: The TerrainData used as basis for the 2D collider. (only when it's a Terrain-gameobject) 
+
+- Polygon Collider: The actual 2D Collider for this object. Normally there is no need to alter this.
+
+- Z-Depth: the position on the Z-axis where to slice the object to get the shape for this 2d collider.
+
+- Match depth to pivot: will set the Z-Depth to match the object's postion on the z-axis, the updates the collider.
+
+- Extra Sample Offsets: Creates extra colliders at these offsets (relative to the z-depth), for each added sample offset. On terrains these colliders are combined into 1.
+Use the "+" button to add sample offsets, and the "-" button to remove them.
+
+- Error Margin: Reduces the complexity of the shape of the collider by removing points that have an impact smaller than this treshold. Should be kept very small, like 0.01 or smaller for objects that are only a few units big.
+
+- Detach Collider: Removes the 2D Mesh Collider script from this object, without destroying the polygon or edge collider.
+
+
+
+
+
+
