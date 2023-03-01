@@ -2,13 +2,16 @@
 %TAG !u! tag:unity3d.com,2011:
 --- !u!21 &2100000
 Material:
-  serializedVersion: 6
+  serializedVersion: 8
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_Name: ChamferGrid
   m_Shader: {fileID: 4800000, guid: 3f2688fbd69dcca43a7e5db9f3b9035d, type: 3}
-  m_ShaderKeywords: _NORMALMAP
+  m_ValidKeywords: []
+  m_InvalidKeywords:
+  - _NORMALMAP
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -62,6 +65,7 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    m_Ints: []
     m_Floats:
     - _BumpScale: 1
     - _Cutoff: 0.5
@@ -88,3 +92,4 @@ Material:
     - _Specular: {r: 0.6886792, g: 0.6886792, b: 0.6886792, a: 0.88235295}
     - _SpecularGreen: {r: 0.1, g: 0.1, b: 0.1, a: 0.5}
     - _SpecularRed: {r: 0.09433961, g: 0.09433961, b: 0.09433961, a: 0.5}
+  m_BuildTextureStacks: []
