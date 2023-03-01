@@ -1357,8 +1357,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 1416928315}
-  placement: {x: -10, y: 1}
-  trackingSpeed: 10
+  placement: {x: -12, y: 5}
+  trackingSpeed: 8
 --- !u!114 &534669907
 MonoBehaviour:
   m_ObjectHideFlags: 0
